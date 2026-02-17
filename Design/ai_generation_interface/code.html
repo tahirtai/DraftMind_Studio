@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DraftMind Editor Workspace</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#F97316", // Orange
+                        "primary-hover": "#ea580c",
+                        "primary-light": "#fed7aa", 
+                        // New Dark Theme Colors
+                        "canvas": "#111315",      // Main editor background
+                        "sidebar": "#141619",     // Sidebar background
+                        "toolbar": "#1A1D21",     // Toolbar background
+                        "panel": "#1A1D21",       // Panel backgrounds
+                        "neutral-surface": "#1A1D21",
+                        "neutral-border": "#2D3139", // Darker border
+                        "neutral-text-main": "#FFFFFF",
+                        "neutral-text-sub": "#9CA3AF",
+                        "neutral-text-muted": "#6B7280",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.375rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                    boxShadow: {
+                        "panel": "-4px 0 24px rgba(0, 0, 0, 0.4)",
+                        "card": "0 1px 3px rgba(0, 0, 0, 0.3)"
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+        body {
+            background-color: #111315;
+            color: #ffffff;
+        }input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        textarea:-webkit-autofill,
+        textarea:-webkit-autofill:hover,
+        textarea:-webkit-autofill:focus,
+        select:-webkit-autofill,
+        select:-webkit-autofill:hover,
+        select:-webkit-autofill:focus {
+            -webkit-text-fill-color: white;
+            -webkit-box-shadow: 0 0 0px 1000px #141619 inset;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+    </style>
+</head>
+<body class="bg-canvas font-display text-neutral-text-main overflow-hidden h-screen flex flex-row">
+<main class="flex-1 flex flex-col h-full bg-canvas relative z-0 transition-all duration-300">
+<header class="h-14 border-b border-neutral-border bg-toolbar flex items-center justify-between px-6 shrink-0 z-10">
+<div class="flex items-center gap-4">
+<button class="text-neutral-text-sub hover:bg-neutral-border hover:text-white p-1.5 rounded-md transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">description</span>
+<h1 class="text-sm font-medium text-neutral-text-main">Untitled Document</h1>
+<span class="text-xs text-neutral-400 px-2 py-0.5 bg-neutral-border rounded">Draft</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center -space-x-2 mr-2">
+<div class="w-8 h-8 rounded-full bg-neutral-700 border-2 border-toolbar flex items-center justify-center text-xs font-medium text-white">JD</div>
+<div class="w-8 h-8 rounded-full bg-primary/20 border-2 border-toolbar flex items-center justify-center text-xs font-medium text-primary">AS</div>
+</div>
+<button class="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20">Share</button>
+</div>
+</header>
+<div class="h-12 border-b border-neutral-border bg-toolbar flex items-center px-6 gap-2 shrink-0 overflow-x-auto">
+<div class="flex items-center bg-sidebar border border-neutral-border rounded-lg p-1 shadow-sm">
+<button class="p-1.5 hover:bg-neutral-border rounded text-neutral-text-sub hover:text-white transition-colors"><span class="material-symbols-outlined text-[18px]">undo</span></button>
+<button class="p-1.5 hover:bg-neutral-border rounded text-neutral-text-sub hover:text-white transition-colors"><span class="material-symbols-outlined text-[18px]">redo</span></button>
+</div>
+<div class="h-6 w-px bg-neutral-border mx-1"></div>
+<div class="flex items-center bg-sidebar border border-neutral-border rounded-lg p-1 shadow-sm">
+<select class="text-sm border-none py-1 pl-2 pr-8 focus:ring-0 text-neutral-text-main font-medium bg-transparent cursor-pointer">
+<option class="bg-sidebar text-white">Normal text</option>
+<option class="bg-sidebar text-white">Heading 1</option>
+<option class="bg-sidebar text-white">Heading 2</option>
+</select>
+</div>
+<div class="h-6 w-px bg-neutral-border mx-1"></div>
+<div class="flex items-center bg-sidebar border border-neutral-border rounded-lg p-1 shadow-sm gap-0.5">
+<button class="p-1.5 hover:bg-neutral-border rounded text-neutral-text-sub hover:text-white font-bold transition-colors"><span class="material-symbols-outlined text-[18px]">format_bold</span></button>
+<button class="p-1.5 hover:bg-neutral-border rounded text-neutral-text-sub hover:text-white italic transition-colors"><span class="material-symbols-outlined text-[18px]">format_italic</span></button>
+<button class="p-1.5 hover:bg-neutral-border rounded text-neutral-text-sub hover:text-white underline transition-colors"><span class="material-symbols-outlined text-[18px]">format_underlined</span></button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto bg-canvas p-8 flex justify-center">
+<div class="w-full max-w-[850px] bg-sidebar min-h-[1000px] shadow-lg shadow-black/20 border border-neutral-border rounded-none sm:rounded-lg p-12 sm:p-16 relative">
+<h1 class="text-4xl font-bold text-neutral-text-main mb-6">The Future of Remote Work</h1>
+<p class="text-base text-neutral-300 leading-relaxed mb-4">
+                    Remote work has transformed from a perk to a necessity for many organizations. As we move forward, hybrid models are emerging as the dominant structure, offering employees flexibility while maintaining the collaborative benefits of in-person interaction.
+                </p>
+<p class="text-base text-neutral-300 leading-relaxed mb-4">
+                    Key trends include asynchronous communication tools, digital nomad visas, and a renewed focus on mental health in distributed teams. Companies that adapt quickly will attract top talent globally.
+                </p>
+<p class="text-base text-neutral-300 leading-relaxed mb-4">
+                    However, challenges remain. The lack of spontaneous "water cooler" moments can lead to feelings of isolation. Leaders must be intentional about creating virtual spaces for connection.
+                </p>
+<div class="h-4 w-full"></div>
+<p class="text-neutral-500 italic">Start writing or type '/' for commands...</p>
+</div>
+</div>
+</main>
+<aside class="w-[400px] bg-sidebar border-l border-neutral-border shadow-panel z-20 flex flex-col shrink-0 h-full">
+<header class="flex items-center justify-between px-5 py-4 border-b border-neutral-border bg-sidebar sticky top-0 z-10">
+<div class="flex items-center gap-2.5">
+<div class="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-orange-600 text-white flex items-center justify-center shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+</div>
+<div>
+<h2 class="text-sm font-semibold text-neutral-text-main">DraftMind</h2>
+</div>
+</div>
+<div class="flex gap-1">
+<button class="text-neutral-text-sub hover:text-white hover:bg-neutral-border p-1.5 rounded transition-colors" title="History">
+<span class="material-symbols-outlined text-[20px]">history</span>
+</button>
+<button class="text-neutral-text-sub hover:text-white hover:bg-neutral-border p-1.5 rounded transition-colors" title="Settings">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+</button>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto px-5 py-6 space-y-6 bg-canvas/30 scroll-smooth">
+<div class="space-y-4">
+<div class="flex justify-end">
+<div class="bg-neutral-border/50 text-neutral-text-main text-sm py-2 px-3.5 rounded-2xl rounded-tr-sm max-w-[85%] border border-neutral-border">
+                        Draft a paragraph about the challenges of remote work isolation.
+                    </div>
+</div>
+<div class="bg-sidebar border border-neutral-border rounded-xl shadow-lg overflow-hidden group hover:border-neutral-600 transition-colors">
+<div class="p-4 space-y-3">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary text-[18px]">spark</span>
+<span class="text-xs font-semibold text-primary">Draft Generated</span>
+</div>
+<p class="text-sm text-neutral-300 leading-relaxed">
+                            However, challenges remain. The lack of spontaneous "water cooler" moments can lead to feelings of isolation. Leaders must be intentional about creating virtual spaces for connection, ensuring that remote employees don't feel disconnected from the company culture.
+                        </p>
+</div>
+<div class="bg-[#181a1d] px-3 py-2 border-t border-neutral-border flex items-center justify-between">
+<div class="flex gap-1">
+<button class="p-1.5 text-neutral-text-sub hover:text-primary hover:bg-neutral-border/50 rounded transition-colors border border-transparent" title="Copy">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+<button class="p-1.5 text-neutral-text-sub hover:text-white hover:bg-neutral-border/50 rounded transition-colors border border-transparent" title="Regenerate">
+<span class="material-symbols-outlined text-[16px]">refresh</span>
+</button>
+</div>
+<button class="text-xs font-medium bg-transparent border border-neutral-border hover:border-primary text-neutral-text-main hover:text-primary px-3 py-1.5 rounded shadow-sm transition-all flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">add</span> Insert
+                        </button>
+</div>
+</div>
+<div class="relative py-4">
+<div aria-hidden="true" class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-neutral-border"></div>
+</div>
+<div class="relative flex justify-center">
+<span class="bg-canvas/30 px-2 text-xs text-neutral-500">Earlier</span>
+</div>
+</div>
+<div class="bg-sidebar p-3 rounded-lg border border-neutral-border hover:border-primary/50 transition-colors cursor-pointer opacity-75 hover:opacity-100 group">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-neutral-500 group-hover:text-primary/70 transition-colors text-[16px]">format_list_bulleted</span>
+<span class="text-xs font-medium text-neutral-400 group-hover:text-neutral-200 transition-colors">Brainstorm: Blog Topics</span>
+</div>
+<p class="text-xs text-neutral-500 truncate">1. The rise of digital nomads...</p>
+</div>
+</div>
+</div>
+<div class="p-5 border-t border-neutral-border bg-sidebar sticky bottom-0 z-10">
+<div class="relative shadow-lg">
+<textarea class="w-full min-h-[100px] max-h-[200px] p-3 pb-12 text-sm bg-sidebar border border-neutral-border rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-neutral-600 leading-relaxed text-white" placeholder="Ask DraftMind AI to write, edit, or brainstorm..."></textarea>
+<div class="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+<div class="flex items-center gap-1">
+<button class="p-1.5 rounded hover:bg-neutral-border text-neutral-text-sub hover:text-white transition-colors" title="Tone">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+<button class="p-1.5 rounded hover:bg-neutral-border text-neutral-text-sub hover:text-white transition-colors" title="Length">
+<span class="material-symbols-outlined text-[18px]">straighten</span>
+</button>
+</div>
+<button class="bg-primary hover:bg-primary-hover text-white rounded-lg p-1.5 px-3 flex items-center gap-1.5 transition-colors shadow-lg shadow-primary/20">
+<span class="text-xs font-semibold">Generate</span>
+<span class="material-symbols-outlined text-[16px]">arrow_upward</span>
+</button>
+</div>
+</div>
+<div class="mt-2 flex justify-center items-center gap-2">
+<p class="text-[10px] text-neutral-500 text-center">DraftMind AI generated content may be inaccurate.</p>
+</div>
+</div>
+</aside>
+
+</body></html>

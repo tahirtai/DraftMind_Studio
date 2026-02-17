@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Account Settings - DraftMind</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#F97316",
+                        "primary-hover": "#EA580C",
+                        "sidebar-bg": "#141619",
+                        "main-bg": "#111315",
+                        "divider": "#262A30",
+                        "text-primary": "#FFFFFF",
+                        "text-secondary": "#A1A1AA",
+                        "card-bg": "#141619", 
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-main-bg font-display text-text-primary antialiased overflow-hidden">
+<div class="flex h-screen w-full overflow-hidden">
+<aside class="flex w-64 flex-col justify-between border-r border-divider bg-sidebar-bg transition-all duration-300">
+<div class="flex flex-col gap-4 p-4">
+<div class="flex items-center gap-3 px-2">
+<div class="flex items-center justify-center rounded-lg bg-primary/10 p-2 text-primary">
+<span class="material-symbols-outlined text-3xl">auto_awesome</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-base font-semibold text-text-primary">DraftMind</h1>
+<p class="text-xs text-text-secondary">Pro Plan</p>
+</div>
+</div>
+<nav class="mt-6 flex flex-col gap-1">
+<a class="group flex items-center gap-3 rounded-lg px-3 py-2 text-text-secondary hover:bg-white/5 hover:text-text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-xl group-hover:text-primary">home</span>
+<span class="text-sm font-medium">Home</span>
+</a>
+<a class="group flex items-center gap-3 rounded-lg px-3 py-2 text-text-secondary hover:bg-white/5 hover:text-text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-xl group-hover:text-primary">description</span>
+<span class="text-sm font-medium">Documents</span>
+</a>
+<a class="group flex items-center gap-3 rounded-lg px-3 py-2 text-text-secondary hover:bg-white/5 hover:text-text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-xl group-hover:text-primary">folder_copy</span>
+<span class="text-sm font-medium">Templates</span>
+</a>
+<div class="my-2 h-px bg-divider"></div>
+<a class="group flex items-center gap-3 rounded-lg bg-primary/10 px-3 py-2 text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-xl fill-1">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+<a class="group flex items-center gap-3 rounded-lg px-3 py-2 text-text-secondary hover:bg-white/5 hover:text-text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-xl group-hover:text-primary">help</span>
+<span class="text-sm font-medium">Help</span>
+</a>
+</nav>
+</div>
+<div class="p-4">
+<button class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-primary/20 hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-sidebar-bg transition-all">
+<span class="material-symbols-outlined text-lg">add</span>
+                New Document
+            </button>
+</div>
+</aside>
+<main class="flex-1 overflow-y-auto bg-main-bg">
+<div class="mx-auto max-w-4xl px-8 py-10">
+<nav class="mb-6 flex items-center gap-2 text-sm text-text-secondary">
+<a class="hover:text-text-primary transition-colors" href="#">Home</a>
+<span class="material-symbols-outlined text-base">chevron_right</span>
+<span class="font-medium text-text-primary">Account Settings</span>
+</nav>
+<div class="mb-10">
+<h1 class="text-3xl font-bold tracking-tight text-text-primary">Account Settings</h1>
+<p class="mt-2 text-base text-text-secondary">Manage your profile details, security preferences, and account data.</p>
+</div>
+<section class="mb-12 rounded-xl border border-divider bg-sidebar-bg p-8 shadow-sm">
+<div class="mb-6 flex items-center justify-between">
+<h2 class="text-xl font-semibold text-text-primary">Profile Information</h2>
+</div>
+<div class="flex flex-col gap-8 md:flex-row">
+<div class="flex flex-col items-center gap-4 md:w-1/3">
+<div class="relative group h-32 w-32 cursor-pointer">
+<div class="h-full w-full overflow-hidden rounded-full ring-4 ring-divider">
+<img alt="Profile avatar of a woman looking confident" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Profile avatar of a user" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJe6eChZFb0xN5x4ufEyLP8KgpOeMi_GGNLkRASSnaVhsU_ZEZDJ9dptEoNFCwGUcbGdFvNK-T5cNAW7qSTn2s49hxfcI2HqEom-ovkruuM379QzkEuzVzQQKK7dxBE5cIYdFPHtbRNVpaSlur3RjVEOdkXP3Sd_TPK8fb8bm3QJPZr8tiPspgjp_wUFHzN1r0TFEL2s5urEPaS9veSh3pI0WjqrXR_C6a9o7l9TCh0kIl9Q6uPPnsFcKbD_45JkxCCFQTBd_5PWU"/>
+</div>
+<div class="absolute inset-0 flex items-center justify-center rounded-full bg-black/60 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+<span class="material-symbols-outlined text-white">photo_camera</span>
+</div>
+</div>
+<button class="text-sm font-medium text-primary hover:text-primary-hover">Change Avatar</button>
+</div>
+<div class="flex-1 space-y-5">
+<div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-text-secondary" for="firstName">First Name</label>
+<input class="w-full rounded-lg border-divider bg-main-bg px-3 py-2 text-text-primary placeholder-zinc-600 focus:border-primary focus:ring-1 focus:ring-primary transition-shadow" id="firstName" type="text" value="Alex"/>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-text-secondary" for="lastName">Last Name</label>
+<input class="w-full rounded-lg border-divider bg-main-bg px-3 py-2 text-text-primary placeholder-zinc-600 focus:border-primary focus:ring-1 focus:ring-primary transition-shadow" id="lastName" type="text" value="Smith"/>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-text-secondary" for="email">Email Address</label>
+<div class="relative">
+<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+<span class="material-symbols-outlined text-text-secondary text-lg">mail</span>
+</div>
+<input class="w-full rounded-lg border-divider bg-main-bg pl-10 pr-3 py-2 text-text-primary placeholder-zinc-600 focus:border-primary focus:ring-1 focus:ring-primary transition-shadow" id="email" type="email" value="alex.smith@example.com"/>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-text-secondary" for="bio">Bio</label>
+<textarea class="w-full rounded-lg border-divider bg-main-bg px-3 py-2 text-text-primary placeholder-zinc-600 focus:border-primary focus:ring-1 focus:ring-primary transition-shadow" id="bio" rows="3">Product Designer based in San Francisco. Passionate about AI and clean UI.</textarea>
+</div>
+<div class="pt-2">
+<button class="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-sidebar-bg transition-colors">
+                                Save Changes
+                            </button>
+</div>
+</div>
+</div>
+</section>
+<section class="mb-12">
+<div class="mb-6 border-b border-divider pb-2">
+<h2 class="text-xl font-semibold text-text-primary">Security</h2>
+</div>
+<div class="rounded-xl border border-divider bg-sidebar-bg p-8 shadow-sm">
+<h3 class="mb-4 text-base font-medium text-text-primary">Change Password</h3>
+<div class="max-w-md space-y-4">
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-text-secondary" for="currentPassword">Current Password</label>
+<input class="w-full rounded-lg border-divider bg-main-bg px-3 py-2 text-text-primary placeholder-zinc-600 focus:border-primary focus:ring-1 focus:ring-primary transition-shadow" id="currentPassword" placeholder="••••••••" type="password"/>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-text-secondary" for="newPassword">New Password</label>
+<input class="w-full rounded-lg border-divider bg-main-bg px-3 py-2 text-text-primary placeholder-zinc-600 focus:border-primary focus:ring-1 focus:ring-primary transition-shadow" id="newPassword" type="password"/>
+</div>
+<div class="pt-2">
+<button class="rounded-lg border border-divider bg-transparent px-4 py-2 text-sm font-semibold text-text-primary hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-divider focus:ring-offset-2 focus:ring-offset-sidebar-bg transition-colors">
+                                Update Password
+                            </button>
+</div>
+</div>
+<div class="my-8 h-px bg-divider"></div>
+<div class="flex items-center justify-between">
+<div class="flex flex-col gap-1">
+<h3 class="text-base font-medium text-text-primary">Two-Factor Authentication</h3>
+<p class="text-sm text-text-secondary">Add an extra layer of security to your account.</p>
+</div>
+<button aria-checked="false" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-divider transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-sidebar-bg" role="switch">
+<span class="translate-x-0 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-text-primary shadow ring-0 transition duration-200 ease-in-out"></span>
+</button>
+</div>
+</div>
+</section>
+<section>
+<div class="mb-6 border-b border-divider pb-2">
+<h2 class="text-xl font-semibold text-red-500">Danger Zone</h2>
+</div>
+<div class="rounded-xl border border-red-900/30 bg-red-900/10 p-8">
+<div class="flex flex-col justify-between gap-6 md:flex-row md:items-center">
+<div class="space-y-1">
+<h3 class="text-base font-bold text-text-primary">Delete Account</h3>
+<p class="text-sm text-text-secondary">Once you delete your account, there is no going back. Please be certain.</p>
+</div>
+<button class="whitespace-nowrap rounded-lg border border-red-900/50 bg-main-bg px-5 py-2.5 text-sm font-bold text-red-500 shadow-sm hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-main-bg transition-colors">
+                            Delete Personal Account
+                        </button>
+</div>
+</div>
+</section>
+</div>
+</main>
+</div>
+
+</body></html>

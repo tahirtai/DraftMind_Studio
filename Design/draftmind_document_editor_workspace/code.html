@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DraftMind Document Editor Workspace</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f97415",
+                        "background-light": "#f8f7f5",
+                        "background-dark": "#111315", 
+                        "sidebar-dark": "#141619",
+                        "surface-dark": "#1A1D21",
+                        "border-dark": "#27272a",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #141619; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272a; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3f3f46; 
+        }
+        
+        .editor-content:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display overflow-hidden h-screen flex">
+<!-- Left Sidebar -->
+<aside class="hidden md:flex flex-col w-64 bg-sidebar-dark border-r border-border-dark h-full shrink-0">
+<div class="flex items-center gap-3 p-4 border-b border-border-dark">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 shrink-0 border border-primary/20" data-alt="DraftMind Logo Abstract" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC3G-7ZAJDKtbBR5YMuBmv0cjEiMM4fH-JIrmpR0Uz2DYmbDcSeBIUq2tdpaas-buhUk4E6n-CuStAKufiPyyw75SgRpz9zrfu6Qx6qvNUSKMfIkionJhjVxGZSvSOiN7m3eE3Z5w0TEMj8w_fC3wEuqfrLcOr3fN2HqtmqhS8sAZwePm5lNem5XS6rHo1fZVCH8dusfjiFcrsgOmiJ6ms95Bk_IoAarCWrFf8FZGddyv1YfAtq9gxFJCG-3HBOPNHzdaX7luMBdSk");'></div>
+<div class="flex flex-col overflow-hidden">
+<h1 class="text-white text-base font-semibold leading-tight truncate">DraftMind</h1>
+<p class="text-gray-400 text-xs font-normal leading-tight truncate">Pro Workspace</p>
+</div>
+</div>
+<nav class="flex-1 overflow-y-auto py-4 px-2 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-white bg-surface-dark/50 hover:bg-surface-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-primary group-hover:text-primary transition-colors">edit_document</span>
+<span class="text-sm font-medium">Editor</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-surface-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-gray-500 group-hover:text-gray-300 transition-colors">folder_open</span>
+<span class="text-sm font-medium">Projects</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-surface-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-gray-500 group-hover:text-gray-300 transition-colors">grid_view</span>
+<span class="text-sm font-medium">Templates</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-surface-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-gray-500 group-hover:text-gray-300 transition-colors">archive</span>
+<span class="text-sm font-medium">Archive</span>
+</a>
+<div class="mt-4 px-3">
+<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Recent</p>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-2 px-2 py-1.5 rounded text-gray-400 hover:text-white hover:bg-surface-dark/50 transition-colors text-sm truncate" href="#">
+<span class="w-1.5 h-1.5 rounded-full bg-primary shrink-0"></span>
+                        Q3 Report Draft
+                    </a>
+<a class="flex items-center gap-2 px-2 py-1.5 rounded text-gray-400 hover:text-white hover:bg-surface-dark/50 transition-colors text-sm truncate" href="#">
+<span class="w-1.5 h-1.5 rounded-full bg-gray-600 shrink-0"></span>
+                        Blog: SaaS Trends
+                    </a>
+<a class="flex items-center gap-2 px-2 py-1.5 rounded text-gray-400 hover:text-white hover:bg-surface-dark/50 transition-colors text-sm truncate" href="#">
+<span class="w-1.5 h-1.5 rounded-full bg-gray-600 shrink-0"></span>
+                        Meeting Notes
+                    </a>
+</div>
+</div>
+</nav>
+<div class="p-4 border-t border-border-dark">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-surface-dark transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+<button class="mt-3 w-full flex items-center justify-center gap-2 rounded-lg h-9 bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-sm font-semibold">
+<span class="material-symbols-outlined text-lg">add</span>
+                New Doc
+            </button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full overflow-hidden relative bg-background-dark">
+<!-- Top Header -->
+<header class="h-16 shrink-0 border-b border-border-dark bg-background-dark/80 backdrop-blur-sm flex items-center justify-between px-6 sticky top-0 z-20">
+<div class="flex items-center gap-4 min-w-0">
+<div class="flex flex-col">
+<div class="flex items-center gap-2 group cursor-pointer">
+<h2 class="text-white text-lg font-semibold leading-tight tracking-tight truncate group-hover:underline decoration-gray-600 underline-offset-4">The Future of SaaS Design</h2>
+<span class="material-symbols-outlined text-gray-500 text-sm opacity-0 group-hover:opacity-100 transition-opacity">edit</span>
+</div>
+<div class="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+<span class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                            Saved to Cloud
+                        </span>
+<span>•</span>
+<span>Last edited 2m ago</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3 shrink-0">
+<div class="flex -space-x-2 mr-2">
+<img alt="Collaborator 1" class="w-8 h-8 rounded-full border-2 border-background-dark" data-alt="User Avatar 1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmCm3Xe37vLBGKSrJx6NFCOeVsK70saQAcm9WJgj0zeO7UX7MVz8UEMRUyC4jEjrYtkhMFu70dVVvQUoKD1Wd1ys-S1IIi1gZZzFQ2Jb29v96HU1Cak9XTzxdfps2Z5oXLgwYLnD3bGRfPGDWqFpGOwWid-UScwgS-Ip3xmexGk58S-9wOO3PkomGYVfU5xu3A8woaRZp0rqt_zchIcWCvpPIemMXwO6SFoMPWjyBPBiIqHPzRtoRVy-OX_m-7sS3WYwNoY4hurHM"/>
+<img alt="Collaborator 2" class="w-8 h-8 rounded-full border-2 border-background-dark" data-alt="User Avatar 2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlvQUe7aa3A9Dz-jc5z1zeQGbFxpuHCQSImUSsEkFJ50vbfqrZ_6NNX-WT-I_hZVCGVuCZukM-ss63N9bYJ4RT1VdKbLq8qVxssn9M6yWlp-DGMYJbcu0CULnyUaizRd9bpW43bOv0TcOjaCaXSLSYbsNh7lGwq3yB05rmRbblOAjAYzMXjirskM-rmcdqHSozj2D7fNEN--pWebjj0ElKwwcoURDwnwU9g6I3b1RTndOqehGJRuPaCKpDKcK0IJQpQW7x7fkiWv0"/>
+<div class="w-8 h-8 rounded-full border-2 border-background-dark bg-surface-dark flex items-center justify-center text-xs text-white font-medium">+3</div>
+</div>
+<div class="h-6 w-px bg-border-dark mx-1"></div>
+<button class="flex items-center justify-center h-9 px-3 rounded-lg bg-surface-dark text-gray-300 hover:text-white hover:bg-gray-700 transition-colors border border-border-dark/50" title="Export">
+<span class="material-symbols-outlined text-[20px]">share</span>
+</button>
+<button class="flex items-center justify-center gap-2 h-9 px-4 rounded-lg bg-primary text-white hover:bg-orange-600 transition-colors shadow-lg shadow-orange-900/20 font-medium tracking-wide">
+<span class="material-symbols-outlined text-[20px]">auto_awesome</span>
+<span class="hidden sm:inline">AI Generate</span>
+</button>
+</div>
+</header>
+<!-- Floating Formatting Toolbar (Simulated) -->
+<div class="absolute top-32 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 p-1.5 bg-surface-dark border border-border-dark rounded-xl shadow-xl shadow-black/40 animate-in fade-in slide-in-from-bottom-2 duration-300">
+<button class="p-2 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[18px]">format_bold</span>
+</button>
+<button class="p-2 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[18px]">format_italic</span>
+</button>
+<button class="p-2 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[18px]">format_underlined</span>
+</button>
+<div class="w-px h-4 bg-gray-700 mx-1"></div>
+<button class="p-2 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[18px]">title</span>
+</button>
+<button class="p-2 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[18px]">format_list_bulleted</span>
+</button>
+<div class="w-px h-4 bg-gray-700 mx-1"></div>
+<button class="px-3 py-1.5 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-semibold transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">auto_fix_high</span>
+                 Improve
+            </button>
+</div>
+<!-- Editor Canvas -->
+<div class="flex-1 overflow-y-auto w-full flex justify-center bg-background-dark relative">
+<div class="w-full max-w-[850px] min-h-[calc(100vh-4rem)] py-12 px-8 md:px-16 bg-background-dark">
+<!-- Document Content -->
+<div class="editor-content text-gray-100 text-lg leading-relaxed space-y-6">
+<h1 class="text-4xl font-bold text-white tracking-tight mb-8">The Future of SaaS Design</h1>
+<p>SaaS design is evolving rapidly. We are moving away from cluttered interfaces towards cleaner, AI-driven experiences. The dark mode trend continues to dominate professional tools, not just as an aesthetic choice, but as a functional requirement for users spending 8+ hours a day in these environments.</p>
+<h2 class="text-2xl font-semibold text-white mt-8 mb-4">1. AI as a Collaborative Partner</h2>
+<p>The most significant shift isn't visual; it's functional. Interfaces are no longer static recipients of input. They are proactive. <span class="bg-primary/20 text-white px-1 py-0.5 rounded selection:bg-primary selection:text-white">Predictive text, context-aware toolbars, and generative sidebars are becoming standard.</span> Designers must now consider the "AI layer" in their component libraries.</p>
+<p>Consider the humble text input. In 2020, it was a box. In 2024, it's a command center. It suggests completions, offers rephrasing, and can expand a bullet point into a paragraph.</p>
+<div class="my-8 p-4 border-l-4 border-primary bg-surface-dark/50 rounded-r-lg">
+<p class="italic text-gray-300">"The interface of the future is invisible. It anticipates intent and removes friction before the user even perceives it."</p>
+</div>
+<h2 class="text-2xl font-semibold text-white mt-8 mb-4">2. The Rise of "Bento Box" Grids</h2>
+<p>Structured, modular layouts—often called Bento grids—are replacing the traditional sidebar-header layout in dashboards. This allows for more information density without overwhelming cognitive load. Each module is self-contained yet part of a cohesive whole.</p>
+<p class="text-gray-500">Start writing or press Space for AI...</p>
+</div>
+</div>
+</div>
+<!-- Bottom Status Bar (Optional for word count etc) -->
+<div class="absolute bottom-4 left-6 text-xs text-gray-500 font-medium hidden md:block select-none">
+            1,240 words • 5 mins read
+        </div>
+</main>
+<!-- Right Sidebar (AI Assistant) -->
+<aside class="w-80 bg-sidebar-dark border-l border-border-dark flex flex-col shrink-0 h-full">
+<!-- AI Header -->
+<div class="h-16 flex items-center justify-between px-4 border-b border-border-dark shrink-0">
+<div class="flex items-center gap-2 text-primary font-semibold">
+<span class="material-symbols-outlined">colors_spark</span>
+<span>AI Assistant</span>
+</div>
+<button class="p-1.5 rounded-lg hover:bg-surface-dark text-gray-500 hover:text-gray-300 transition-colors">
+<span class="material-symbols-outlined text-[20px]">history</span>
+</button>
+</div>
+<!-- Chat History Area -->
+<div class="flex-1 overflow-y-auto p-4 space-y-6">
+<!-- AI Message -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-[14px]">smart_toy</span>
+</div>
+<span class="text-xs font-semibold text-gray-400">DraftMind AI</span>
+</div>
+<div class="p-3 bg-surface-dark rounded-lg rounded-tl-none border border-border-dark text-sm text-gray-300 leading-relaxed shadow-sm">
+                    How can I help you refine your draft today? I can generate sections, fix tone, or brainstorm ideas.
+                </div>
+</div>
+<!-- User Message -->
+<div class="flex flex-col gap-2 items-end">
+<div class="p-3 bg-primary/10 rounded-lg rounded-tr-none border border-primary/20 text-sm text-white leading-relaxed max-w-[90%]">
+                    Give me 3 bullet points about "Dark Mode Usability" for the next section.
+                </div>
+</div>
+<!-- AI Response -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-[14px]">smart_toy</span>
+</div>
+<span class="text-xs font-semibold text-gray-400">DraftMind AI</span>
+</div>
+<div class="p-3 bg-surface-dark rounded-lg rounded-tl-none border border-border-dark text-sm text-gray-300 leading-relaxed shadow-sm">
+<p class="mb-2">Here are 3 points on Dark Mode Usability:</p>
+<ul class="list-disc pl-4 space-y-1 marker:text-primary">
+<li><strong>Reduced Eye Strain:</strong> Lowers blue light emission, critical for late-night coding or writing sessions.</li>
+<li><strong>Battery Efficiency:</strong> OLED screens consume significantly less power when displaying true blacks.</li>
+<li><strong>Visual Hierarchy:</strong> High-contrast accents (like our orange) pop more vividly against dark backgrounds, guiding user attention effectively.</li>
+</ul>
+<div class="mt-3 flex gap-2">
+<button class="text-xs px-2 py-1 rounded border border-border-dark hover:border-primary/50 hover:bg-primary/10 hover:text-primary transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">add</span> Insert
+                        </button>
+<button class="text-xs px-2 py-1 rounded border border-border-dark hover:border-gray-500 hover:bg-gray-700 transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">refresh</span> Retry
+                        </button>
+</div>
+</div>
+</div>
+<!-- Simulated Loading State -->
+<div class="flex items-center gap-2 opacity-50">
+<div class="w-6 h-6 rounded-full bg-surface-dark flex items-center justify-center shrink-0 border border-border-dark">
+<span class="material-symbols-outlined text-gray-500 text-[14px]">more_horiz</span>
+</div>
+<span class="text-xs text-gray-500 italic">AI is thinking...</span>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-4 border-t border-border-dark bg-sidebar-dark shrink-0">
+<div class="relative">
+<textarea class="w-full bg-surface-dark border border-border-dark rounded-lg p-3 pr-10 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 resize-none h-24" placeholder="Ask AI to write, rewrite, or summarize..."></textarea>
+<div class="absolute bottom-2 right-2 flex items-center gap-1">
+<button class="p-1.5 rounded-md hover:bg-gray-700 text-gray-400 transition-colors" title="Mic">
+<span class="material-symbols-outlined text-[18px]">mic</span>
+</button>
+<button class="p-1.5 rounded-md bg-primary hover:bg-orange-600 text-white transition-colors shadow-lg shadow-orange-900/20" title="Send">
+<span class="material-symbols-outlined text-[18px]">arrow_upward</span>
+</button>
+</div>
+</div>
+<div class="mt-2 flex items-center justify-between text-[10px] text-gray-500 px-1">
+<span>Pro Plan: Unlimited GPT-4</span>
+<span>Press ⌘+Enter to send</span>
+</div>
+</div>
+</aside>
+</body></html>

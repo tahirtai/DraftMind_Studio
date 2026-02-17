@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DraftMind Billing &amp; Subscription Page</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#F97316", // Orange
+                        "primary-content": "#ffffff",
+                        "primary-dark": "#ea580c",
+                        "primary-light": "#fff7ed",
+                        "background-dark": "#111315", // Main background
+                        "sidebar-dark": "#141619", // Sidebar background
+                        "surface-dark": "#1A1D21", // Surface
+                        "border-dark": "#262A30", // Borders
+                        "text-primary": "#FFFFFF",
+                        "text-secondary": "#A1A1AA",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #262A30;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3f444d;
+        }
+    </style>
+</head>
+<body class="bg-background-dark text-text-primary overflow-hidden h-screen flex dark">
+<aside class="w-64 bg-sidebar-dark border-r border-border-dark flex flex-col justify-between h-full transition-all duration-300">
+<div class="flex flex-col gap-6 p-6">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center text-white shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">auto_awesome</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-text-primary text-base font-bold leading-none tracking-tight">DraftMind</h1>
+<p class="text-text-secondary text-xs font-medium mt-1">Studio Workspace</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-surface-dark hover:text-text-primary font-medium transition-colors group" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-surface-dark hover:text-text-primary font-medium transition-colors group" href="#">
+<span class="material-symbols-outlined">folder_open</span>
+<span>Projects</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-surface-dark hover:text-text-primary font-medium transition-colors group" href="#">
+<span class="material-symbols-outlined">description</span>
+<span>Recent Documents</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary font-medium group transition-colors" href="#">
+<span class="material-symbols-outlined filled">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+</div>
+<div class="flex flex-col gap-2 p-4 border-t border-border-dark">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:bg-surface-dark transition-colors text-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">help</span>
+<span>Help &amp; Support</span>
+</a>
+<div class="flex items-center gap-3 px-3 py-3 mt-1 rounded-xl bg-surface-dark/50 border border-border-dark">
+<div class="relative">
+<img alt="User Avatar" class="w-9 h-9 rounded-full object-cover border border-gray-600 shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3LzrNxbQJQ6YojiTbAI-tuRBDHfkdGpkNsiEuummpqzXO6sLczvepejjESYUEu36rhi8KPzVPwHFFPqwtvkXPB51GGZrMVEGLZtKSeTwXhVb5xJWBd8xct_sYBXxV-ZrNHwfvD1JVUGIsklcw-9fgRMTZluq4AA-i_ouKQHBgz7Y0HAheyJzHUAN1j5PMcIJd8i7Sz7v_2UfCLNdQssmt5zDVxy9fqGVKDaDrzqYLbLThmdqN01tSkvCbfFTAFqu9V8n3ZRT60O4"/>
+<div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-surface-dark"></div>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<p class="text-sm font-semibold text-text-primary truncate">Alex Morgan</p>
+<p class="text-xs text-text-secondary truncate">alex@draftmind.ai</p>
+</div>
+<button class="text-text-secondary hover:text-text-primary">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+</button>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-full overflow-hidden relative bg-background-dark">
+<header class="h-16 px-8 flex items-center justify-between bg-background-dark border-b border-border-dark shrink-0 z-10">
+<div class="flex items-center gap-4 text-sm text-text-secondary">
+<span class="text-xs font-medium bg-surface-dark px-2 py-1 rounded border border-border-dark shadow-sm">
+                   Today is <span class="text-text-primary font-semibold" id="current-date">Oct 24, 2023</span>
+</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="relative group">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-text-secondary">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</span>
+<input class="pl-10 pr-4 py-2 text-sm bg-surface-dark text-white border-none ring-1 ring-border-dark rounded-lg focus:ring-2 focus:ring-primary w-64 transition-all placeholder-gray-500" placeholder="Search..." type="text"/>
+</div>
+<button class="relative p-2 text-text-secondary hover:bg-surface-dark rounded-lg transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
+</button>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto p-8 pt-2">
+<div class="max-w-6xl mx-auto flex flex-col gap-8">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-border-dark">
+<div class="space-y-1">
+<h2 class="text-3xl font-bold text-text-primary tracking-tight">Billing &amp; Subscription</h2>
+<p class="text-text-secondary">Manage your plan, billing history, and payment methods.</p>
+</div>
+</div>
+<section class="bg-surface-dark rounded-xl p-6 border border-border-dark flex flex-col md:flex-row items-center justify-between gap-6">
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-3">
+<h3 class="text-xl font-bold text-text-primary">Pro Plan</h3>
+<span class="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">Active</span>
+</div>
+<p class="text-text-secondary text-sm max-w-lg">
+                            Your next billing date is <span class="text-text-primary font-medium">November 24, 2023</span>. You will be charged $29.00 for the upcoming month.
+                        </p>
+</div>
+<div class="flex items-center gap-3 w-full md:w-auto">
+<button class="w-full md:w-auto px-4 py-2 rounded-lg border border-border-dark bg-background-dark text-text-primary hover:bg-gray-800 transition-colors text-sm font-medium">
+                            Manage Subscription
+                        </button>
+<button class="hidden md:flex items-center justify-center w-10 h-10 rounded-lg border border-border-dark bg-background-dark text-text-secondary hover:text-text-primary hover:bg-gray-800 transition-colors">
+<span class="material-symbols-outlined">download</span>
+</button>
+</div>
+</section>
+<section>
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-lg font-semibold text-text-primary">Subscription Plans</h3>
+<div class="flex items-center gap-2 bg-surface-dark p-1 rounded-lg border border-border-dark">
+<button class="px-3 py-1 rounded text-sm font-medium bg-gray-700 text-white shadow-sm">Monthly</button>
+<button class="px-3 py-1 rounded text-sm font-medium text-text-secondary hover:text-text-primary">Yearly</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-surface-dark rounded-xl p-6 border border-border-dark flex flex-col">
+<div class="mb-4">
+<h4 class="text-lg font-bold text-text-primary">Free</h4>
+<p class="text-text-secondary text-sm mt-1">Perfect for trying out DraftMind.</p>
+</div>
+<div class="mb-6">
+<span class="text-3xl font-bold text-text-primary">$0</span>
+<span class="text-text-secondary text-sm">/month</span>
+</div>
+<ul class="space-y-3 mb-8 flex-1">
+<li class="flex items-center gap-2 text-sm text-text-secondary">
+<span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
+                                    5 Projects
+                                </li>
+<li class="flex items-center gap-2 text-sm text-text-secondary">
+<span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
+                                    Basic AI Generation
+                                </li>
+<li class="flex items-center gap-2 text-sm text-text-secondary">
+<span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
+                                    Community Support
+                                </li>
+</ul>
+<button class="w-full py-2 rounded-lg border border-border-dark text-text-primary hover:bg-gray-800 transition-colors text-sm font-medium">Downgrade</button>
+</div>
+<div class="bg-surface-dark rounded-xl p-6 border-2 border-primary relative flex flex-col shadow-lg shadow-primary/5">
+<div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                                Current Plan
+                            </div>
+<div class="mb-4 mt-2">
+<h4 class="text-lg font-bold text-text-primary">Pro</h4>
+<p class="text-text-secondary text-sm mt-1">For professional content creators.</p>
+</div>
+<div class="mb-6">
+<span class="text-3xl font-bold text-text-primary">$29</span>
+<span class="text-text-secondary text-sm">/month</span>
+</div>
+<ul class="space-y-3 mb-8 flex-1">
+<li class="flex items-center gap-2 text-sm text-text-primary">
+<span class="material-symbols-outlined text-primary text-[18px]">check</span>
+                                    Unlimited Projects
+                                </li>
+<li class="flex items-center gap-2 text-sm text-text-primary">
+<span class="material-symbols-outlined text-primary text-[18px]">check</span>
+                                    Advanced AI Models
+                                </li>
+<li class="flex items-center gap-2 text-sm text-text-primary">
+<span class="material-symbols-outlined text-primary text-[18px]">check</span>
+                                    Priority Support
+                                </li>
+<li class="flex items-center gap-2 text-sm text-text-primary">
+<span class="material-symbols-outlined text-primary text-[18px]">check</span>
+                                    Analytics Dashboard
+                                </li>
+</ul>
+<button class="w-full py-2 rounded-lg bg-primary hover:bg-primary-dark text-white shadow-lg shadow-primary/20 transition-all text-sm font-medium cursor-default opacity-90">Current Plan</button>
+</div>
+<div class="bg-surface-dark rounded-xl p-6 border border-border-dark flex flex-col">
+<div class="mb-4">
+<h4 class="text-lg font-bold text-text-primary">Team</h4>
+<p class="text-text-secondary text-sm mt-1">Collaboration tools for agencies.</p>
+</div>
+<div class="mb-6">
+<span class="text-3xl font-bold text-text-primary">$99</span>
+<span class="text-text-secondary text-sm">/month</span>
+</div>
+<ul class="space-y-3 mb-8 flex-1">
+<li class="flex items-center gap-2 text-sm text-text-secondary">
+<span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
+                                    Everything in Pro
+                                </li>
+<li class="flex items-center gap-2 text-sm text-text-secondary">
+<span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
+                                    Unlimited Team Members
+                                </li>
+<li class="flex items-center gap-2 text-sm text-text-secondary">
+<span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
+                                    Dedicated Account Manager
+                                </li>
+<li class="flex items-center gap-2 text-sm text-text-secondary">
+<span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
+                                    SSO Integration
+                                </li>
+</ul>
+<button class="w-full py-2 rounded-lg border border-primary text-primary hover:bg-primary/10 transition-colors text-sm font-medium">Upgrade to Team</button>
+</div>
+</div>
+</section>
+<section class="pb-10">
+<h3 class="text-lg font-semibold text-text-primary mb-4">Payment Method</h3>
+<div class="bg-surface-dark rounded-xl p-6 border border-border-dark flex flex-col sm:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-4 w-full sm:w-auto">
+<div class="w-12 h-8 bg-white/10 rounded border border-white/20 flex items-center justify-center">
+<svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M19.006 3.705a1.277 1.277 0 00-.23-.016h-3.8c-.85 0-1.493.567-1.815 1.34l-6.4 15.267h3.987l.794-2.19h4.868l.458 2.19h3.518L19.006 3.705zm-5.07 10.22l2.332-6.417.06-.016 1.353 6.433h-3.745zM1.988 3.705h4.156l2.583 16.592H4.755L1.988 3.705zm14.394 11.23h1.77l-1.077-5.115-.596 2.802-.097 2.313z"></path>
+</svg>
+</div>
+<div>
+<p class="text-text-primary font-medium text-sm">Visa ending in 4242</p>
+<p class="text-text-secondary text-xs">Expiry 12/2025 • Default</p>
+</div>
+</div>
+<button class="px-4 py-2 rounded-lg text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-gray-800 transition-colors border border-transparent hover:border-border-dark">
+                        Edit
+                    </button>
+</div>
+</section>
+</div>
+</div>
+</main>
+<script>
+        // Simple script to set current date
+        const dateElement = document.getElementById('current-date');
+        const options = { weekday: 'short', month: 'short', day: 'numeric' };
+        dateElement.textContent = new Date().toLocaleDateString('en-US', options);
+    </script>
+</body></html>
