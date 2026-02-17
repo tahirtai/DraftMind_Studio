@@ -77,7 +77,7 @@ const Dashboard: React.FC = () => {
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-text-secondary">
                             <span className="material-symbols-outlined text-[20px]">search</span>
                         </span>
-                        <input className="pl-10 pr-4 py-2 text-sm bg-surface-dark text-white border-none ring-1 ring-border-dark rounded-lg focus:ring-2 focus:ring-primary w-full md:w-64 transition-all placeholder-gray-500" placeholder="Search..." type="text" />
+                        <input className="pl-10 pr-4 py-2 text-sm bg-surface-dark text-text-primary border-none ring-1 ring-border-dark rounded-lg focus:ring-2 focus:ring-primary w-full md:w-64 transition-all placeholder-gray-500" placeholder="Search..." type="text" />
                     </div>
                     <button className="relative p-2 text-text-secondary hover:bg-surface-dark rounded-lg transition-colors">
                         <span className="material-symbols-outlined">notifications</span>
@@ -194,7 +194,7 @@ const Dashboard: React.FC = () => {
                                 </div>
                                 <div className="bg-surface-dark rounded-xl p-6 border border-border-dark flex flex-col justify-center items-start">
                                     <h3 className="font-bold text-lg text-text-primary mb-2">Workspace Stats</h3>
-                                    <div className="flex gap-8 mt-2">
+                                    <div className="flex flex-wrap gap-8 mt-2">
                                         <div>
                                             <p className="text-3xl font-bold text-text-primary">{stats.projectCount}</p>
                                             <p className="text-xs text-text-secondary uppercase tracking-wide font-medium mt-1">Active Projects</p>

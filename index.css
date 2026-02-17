@@ -1,1 +1,84 @@
 @import "tailwindcss";
+
+@layer base {
+    :root {
+        /* Default to Dark Theme (Preserves current look) */
+        --bg-dark: #111827;
+        /* gray-900 */
+        --surface-dark: #1f2937;
+        /* gray-800 */
+        --border-dark: #374151;
+        /* gray-700 */
+
+        --text-primary: #f9fafb;
+        /* gray-50 */
+        --text-secondary: #9ca3af;
+        /* gray-400 */
+
+        --sidebar-bg: #111827;
+        /* gray-900 */
+    }
+
+    .light {
+        /* Light Theme Overrides */
+        --bg-dark: #f3f4f6;
+        /* gray-100 (Main background becomes light gray) */
+        --surface-dark: #ffffff;
+        /* white (Cards/Surface becomes white) */
+        --border-dark: #e5e7eb;
+        /* gray-200 */
+
+        --text-primary: #111827;
+        /* gray-900 (Text becomes dark) */
+        --text-secondary: #4b5563;
+        /* gray-600 */
+
+        --sidebar-bg: #ffffff;
+        /* white (Sidebar becomes white) */
+    }
+}
+
+/* Custom Animations */
+@keyframes marquee {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+@keyframes blob {
+    0% {
+        transform: translate(0px, 0px) scale(1);
+    }
+
+    33% {
+        transform: translate(30px, -50px) scale(1.1);
+    }
+
+    66% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+
+    100% {
+        transform: translate(0px, 0px) scale(1);
+    }
+}
+
+.animate-marquee {
+    animation: marquee 40s linear infinite;
+}
+
+.animate-blob {
+    animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+    animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+    animation-delay: 4s;
+}

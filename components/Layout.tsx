@@ -28,7 +28,7 @@ const Layout: React.FC = () => {
                 <div className="md:hidden h-14 border-b border-border-dark flex items-center px-4 shrink-0 bg-background-dark">
                     <button
                         onClick={() => setIsMobileMenuOpen(true)}
-                        className="p-2 -ml-2 text-text-secondary hover:text-white"
+                        className="p-2 -ml-2 text-text-secondary hover:text-text-primary"
                     >
                         <span className="material-symbols-outlined">menu</span>
                     </button>

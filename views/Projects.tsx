@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getProjects, createProject, renameProject, deleteProject, toggleFavorite, updateProjectStatus } from '../lib/database';
+import { getProjects, createProject, renameProject, deleteProject, toggleFavorite, updateProjectStatus, getDocuments } from '../lib/database';
+import { generateZip, shareContent } from '../lib/export';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 
 const PROJ_STATUSES = ['Draft', 'Review', 'Final', 'Idea', 'Published', 'Archived'] as const;
 
@@ -9,8 +11,12 @@ const Projects: React.FC = () => {
     const [projects, setProjects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('All');
-    const [menuOpen, setMenuOpen] = useState<string | null>(null);
     const [statusMenuFor, setStatusMenuFor] = useState<string | null>(null);
+    const [menuOpen, setMenuOpen] = useState<string | null>(null);
+    const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+
+    // Delete Modal State
+    const [deleteModal, setDeleteModal] = useState<{ open: boolean; id: string | null; name: string }>({ open: false, id: null, name: '' });
 
     useEffect(() => {
         loadProjects();
@@ -40,11 +46,17 @@ const Projects: React.FC = () => {
         setMenuOpen(null);
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Delete this project and all its documents?')) return;
-        await deleteProject(id);
-        setProjects(prev => prev.filter(p => p.id !== id));
+    const confirmDelete = async (id: string) => { // Renamed from handleDelete to confirmDelete (action-wise) or keep handleDelete as the opener
+        // This opens the modal
+        setDeleteModal({ open: true, id, name: projects.find(p => p.id === id)?.name || 'Project' });
         setMenuOpen(null);
+    };
+
+    const executeDelete = async () => {
+        if (!deleteModal.id) return;
+        await deleteProject(deleteModal.id);
+        setProjects(prev => prev.filter(p => p.id !== deleteModal.id));
+        setDeleteModal({ open: false, id: null, name: '' });
     };
 
     const handleToggleFavorite = async (id: string, current: boolean) => {
@@ -57,6 +69,33 @@ const Projects: React.FC = () => {
         await updateProjectStatus(id, newStatus);
         setProjects(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
         setStatusMenuFor(null);
+        setMenuOpen(null);
+    };
+
+    const handleDownloadProject = async (project: any) => {
+        // We need to fetch documents for this project first
+        // If we don't have them in state, we must fetch
+        // Assuming getDocuments returns { data }
+        const { data: docs } = await getDocuments(project.id);
+        if (!docs || docs.length === 0) {
+            alert('No documents to download in this project.');
+            return;
+        }
+
+        await generateZip(
+            docs.map((d: any) => ({ title: d.title, content: d.content || '' })),
+            `${project.name.replace(/[^a-z0-9]/gi, '_')}_archive.zip`
+        );
+        setMenuOpen(null);
+    };
+
+    const handleShareProject = async (project: any) => {
+        const url = `${window.location.origin}/projects/${project.id}`;
+        await shareContent({
+            title: project.name,
+            text: `Check out my project "${project.name}" on DraftMind Studio!`,
+            url: url
+        });
         setMenuOpen(null);
     };
 
@@ -135,7 +174,7 @@ const Projects: React.FC = () => {
                 {/* Filter tabs */}
                 <div className="flex items-center gap-2 flex-wrap">
                     {['All', 'Draft', 'Idea', 'Review', 'Final', 'Published', 'Archived'].map(f => (
-                        <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${filter === f ? 'bg-primary/20 text-primary border border-primary/20' : 'text-text-secondary hover:text-white hover:bg-white/5 border border-transparent'}`}>
+                        <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${filter === f ? 'bg-primary/20 text-primary border border-primary/20' : 'text-text-secondary hover:text-text-primary hover:bg-gray-100 dark:hover:bg-white/5 border border-transparent'}`}>
                             {f}
                         </button>
                     ))}
@@ -194,53 +233,28 @@ const Projects: React.FC = () => {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-text-secondary">{formatTimeAgo(project.updated_at)}</td>
-                                                <td className="px-6 py-4 text-right relative">
+                                                <td className="px-6 py-4 text-right">
                                                     <button
-                                                        onClick={(e) => { e.stopPropagation(); setMenuOpen(menuOpen === project.id ? null : project.id); setStatusMenuFor(null); }}
-                                                        className="p-1.5 rounded-md text-text-secondary hover:text-text-primary hover:bg-gray-700 opacity-0 group-hover:opacity-100 transition-all"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                            const spaceBelow = window.innerHeight - rect.bottom;
+                                                            if (spaceBelow < 280) { // Open upwards
+                                                                setMenuStyle({ bottom: window.innerHeight - rect.top + 5, right: window.innerWidth - rect.right });
+                                                            } else {
+                                                                setMenuStyle({ top: rect.bottom + 5, right: window.innerWidth - rect.right });
+                                                            }
+                                                            if (menuOpen === project.id) {
+                                                                setMenuOpen(null);
+                                                            } else {
+                                                                setMenuOpen(project.id);
+                                                            }
+                                                            setStatusMenuFor(null);
+                                                        }}
+                                                        className={`p-1.5 rounded-md transition-all ${menuOpen === project.id ? 'text-text-primary bg-gray-700 opacity-100' : 'text-text-secondary hover:text-text-primary hover:bg-gray-700 opacity-100 md:opacity-0 group-hover:opacity-100'}`}
                                                     >
                                                         <span className="material-symbols-outlined text-[20px]">more_horiz</span>
                                                     </button>
-                                                    {menuOpen === project.id && (
-                                                        <div className="absolute right-6 top-12 z-50 w-44 bg-surface-dark border border-border-dark rounded-lg shadow-xl shadow-black/40 py-1">
-                                                            <button onClick={(e) => { e.stopPropagation(); handleRename(project.id, project.name); }} className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5 flex items-center gap-2">
-                                                                <span className="material-symbols-outlined text-[16px]">edit</span> Rename
-                                                            </button>
-                                                            <button onClick={(e) => { e.stopPropagation(); handleToggleFavorite(project.id, project.is_favorite); }} className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5 flex items-center gap-2">
-                                                                <span className="material-symbols-outlined text-[16px]">{project.is_favorite ? 'star' : 'star_border'}</span> {project.is_favorite ? 'Unfavorite' : 'Favorite'}
-                                                            </button>
-                                                            {/* Change Status submenu */}
-                                                            <div className="relative">
-                                                                <button
-                                                                    onClick={(e) => { e.stopPropagation(); setStatusMenuFor(statusMenuFor === project.id ? null : project.id); }}
-                                                                    className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5 flex items-center gap-2 justify-between"
-                                                                >
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="material-symbols-outlined text-[16px]">swap_horiz</span> Status
-                                                                    </div>
-                                                                    <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-                                                                </button>
-                                                                {statusMenuFor === project.id && (
-                                                                    <div className="absolute left-[-170px] top-0 z-50 w-40 bg-surface-dark border border-border-dark rounded-lg shadow-xl shadow-black/40 py-1">
-                                                                        {PROJ_STATUSES.map(s => (
-                                                                            <button
-                                                                                key={s}
-                                                                                onClick={(e) => { e.stopPropagation(); handleStatusChange(project.id, s); }}
-                                                                                className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors ${project.status === s ? 'text-primary bg-primary/10' : 'text-text-secondary hover:text-white hover:bg-white/5'}`}
-                                                                            >
-                                                                                <span className={`w-2 h-2 rounded-full ${statusDot(s)}`}></span>
-                                                                                {s}
-                                                                            </button>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <hr className="border-border-dark my-1" />
-                                                            <button onClick={(e) => { e.stopPropagation(); handleDelete(project.id); }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/10 flex items-center gap-2">
-                                                                <span className="material-symbols-outlined text-[16px]">delete</span> Delete
-                                                            </button>
-                                                        </div>
-                                                    )}
                                                 </td>
                                             </tr>
                                         );
@@ -252,8 +266,83 @@ const Projects: React.FC = () => {
                 )}
             </div>
 
-            {/* Click outside to close menus */}
-            {(menuOpen || statusMenuFor) && <div className="fixed inset-0 z-40" onClick={() => { setMenuOpen(null); setStatusMenuFor(null); }}></div>}
+            {/* Fixed Menu Overlay */}
+            {menuOpen && (
+                <>
+                    <div className="fixed inset-0 z-40" onClick={() => { setMenuOpen(null); setStatusMenuFor(null); }}></div>
+                    <div
+                        className="fixed z-50 w-48 bg-surface-dark border border-border-dark rounded-lg shadow-xl shadow-black/60 py-1 slide-in-from-top-2 animate-in fade-in zoom-in-95 duration-100"
+                        style={menuStyle}
+                    >
+                        {(() => {
+                            const project = projects.find(p => p.id === menuOpen);
+                            if (!project) return null;
+
+                            return (
+                                <>
+                                    <button onClick={(e) => { e.stopPropagation(); navigate(`/projects/${project.id}`); }} className="w-full text-left px-4 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-gray-100 dark:hover:bg-white/5 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]">open_in_new</span> Open
+                                    </button>
+                                    <button onClick={(e) => { e.stopPropagation(); handleDownloadProject(project); }} className="w-full text-left px-4 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-gray-100 dark:hover:bg-white/5 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]">download</span> Download ZIP
+                                    </button>
+                                    <button onClick={(e) => { e.stopPropagation(); handleShareProject(project); }} className="w-full text-left px-4 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-gray-100 dark:hover:bg-white/5 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]">share</span> Share
+                                    </button>
+                                    <div className="h-px bg-border-dark my-1"></div>
+                                    <button onClick={(e) => { e.stopPropagation(); handleRename(project.id, project.name); }} className="w-full text-left px-4 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-gray-100 dark:hover:bg-white/5 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]">edit</span> Rename
+                                    </button>
+                                    <button onClick={(e) => { e.stopPropagation(); handleToggleFavorite(project.id, project.is_favorite); }} className="w-full text-left px-4 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-gray-100 dark:hover:bg-white/5 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]">{project.is_favorite ? 'star' : 'star_border'}</span> {project.is_favorite ? 'Unfavorite' : 'Favorite'}
+                                    </button>
+
+                                    {/* Status Submenu */}
+                                    <div className="relative group/status">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setStatusMenuFor(statusMenuFor === project.id ? null : project.id); }}
+                                            className="w-full text-left px-4 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-gray-100 dark:hover:bg-white/5 flex items-center gap-2 justify-between"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-[18px]">swap_horiz</span> Status
+                                            </div>
+                                            <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                                        </button>
+
+                                        {statusMenuFor === project.id && (
+                                            <div className="absolute right-full top-0 mr-1 z-50 w-40 bg-surface-dark border border-border-dark rounded-lg shadow-xl shadow-black/60 py-1">
+                                                {PROJ_STATUSES.map(s => (
+                                                    <button
+                                                        key={s}
+                                                        onClick={(e) => { e.stopPropagation(); handleStatusChange(project.id, s); }}
+                                                        className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors ${project.status === s ? 'text-primary bg-primary/10' : 'text-text-secondary hover:text-text-primary hover:bg-gray-100 dark:hover:bg-white/5'}`}
+                                                    >
+                                                        <span className={`w-2 h-2 rounded-full ${statusDot(s)}`}></span>
+                                                        {s}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="h-px bg-border-dark my-1"></div>
+                                    <button onClick={(e) => { e.stopPropagation(); confirmDelete(project.id); }} className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]">delete</span> Delete
+                                    </button>
+                                </>
+                            );
+                        })()}
+                    </div>
+                </>
+            )}
+            {/* Delete Modal */}
+            <DeleteConfirmationModal
+                isOpen={deleteModal.open}
+                onClose={() => setDeleteModal({ ...deleteModal, open: false })}
+                onConfirm={executeDelete}
+                itemName={deleteModal.name}
+                itemType="project"
+            />
         </div>
     );
 };

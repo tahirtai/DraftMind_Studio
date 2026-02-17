@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getProject, getDocuments, createDocument, renameDocument, deleteDocument, updateDocumentStatus } from '../lib/database';
+import { generateZip, shareContent } from '../lib/export';
 
 const DOC_STATUSES = ['Draft', 'Review', 'Final', 'Published', 'Archived'] as const;
 
@@ -12,6 +13,8 @@ const ProjectDetails: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [menuOpen, setMenuOpen] = useState<string | null>(null);
     const [statusMenuFor, setStatusMenuFor] = useState<string | null>(null);
+    const [downloadMenuFor, setDownloadMenuFor] = useState<string | null>(null);
+    const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
 
     useEffect(() => {
         if (id) loadData();
@@ -56,6 +59,56 @@ const ProjectDetails: React.FC = () => {
         await updateDocumentStatus(docId, newStatus);
         setDocuments(prev => prev.map(d => d.id === docId ? { ...d, status: newStatus } : d));
         setStatusMenuFor(null);
+        setMenuOpen(null);
+    };
+
+    const handleDownloadProject = async () => {
+        if (!documents.length) {
+            alert('No documents to download.');
+            return;
+        }
+        await generateZip(
+            documents.map(d => ({ title: d.title, content: d.content || '' })),
+            `${project.name.replace(/[^a-z0-9]/gi, '_')}_archive.zip`
+        );
+    };
+
+    const handleShareProject = async () => {
+        const url = window.location.href;
+        await shareContent({
+            title: project.name,
+            text: `Check out my project "${project.name}" on DraftMind Studio!`,
+            url: url
+        });
+    };
+
+    const handleDownloadDoc = async (doc: any, format: 'pdf' | 'docx' | 'html') => {
+        const filename = doc.title.replace(/[^a-z0-9]/gi, '_');
+        // Dynamic import to avoid SSR issues if any, though here it's SPA
+        const { generatePdf, generateDocx, generateHtml } = await import('../lib/export');
+
+        switch (format) {
+            case 'pdf':
+                await generatePdf(doc.content || '', `${filename}.pdf`);
+                break;
+            case 'docx':
+                await generateDocx(doc.content || '', `${filename}.docx`);
+                break;
+            case 'html':
+                generateHtml(doc.content || '', `${filename}.html`);
+                break;
+        }
+        setDownloadMenuFor(null);
+        setMenuOpen(null);
+    };
+
+    const handleShareDoc = async (doc: any) => {
+        const url = `${window.location.origin}/editor/${doc.id}`;
+        await shareContent({
+            title: doc.title,
+            text: `Check out "${doc.title}" on DraftMind Studio!`,
+            url: url,
+        });
         setMenuOpen(null);
     };
 
@@ -132,6 +185,12 @@ const ProjectDetails: React.FC = () => {
                         </p>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
+                        <button onClick={handleShareProject} className="flex items-center justify-center h-10 px-4 rounded-lg bg-surface-dark text-gray-300 hover:text-white hover:bg-gray-700 transition-colors border border-border-dark/50" title="Share Project">
+                            <span className="material-symbols-outlined text-[20px]">share</span>
+                        </button>
+                        <button onClick={handleDownloadProject} className="flex items-center justify-center h-10 px-4 rounded-lg bg-surface-dark text-gray-300 hover:text-white hover:bg-gray-700 transition-colors border border-border-dark/50" title="Download Project (ZIP)">
+                            <span className="material-symbols-outlined text-[20px]">download</span>
+                        </button>
                         <button onClick={handleCreateDocument} className="flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-primary hover:bg-orange-600 text-white text-sm font-bold shadow-lg shadow-primary/20 transition-all">
                             <span className="material-symbols-outlined text-[20px]">add</span>
                             <span className="whitespace-nowrap">New Document</span>
@@ -197,48 +256,24 @@ const ProjectDetails: React.FC = () => {
                                                 <td className="px-6 py-4 text-text-secondary">{formatTimeAgo(doc.updated_at)}</td>
                                                 <td className="px-6 py-4 text-right relative">
                                                     <button
-                                                        onClick={(e) => { e.stopPropagation(); setMenuOpen(menuOpen === doc.id ? null : doc.id); setStatusMenuFor(null); }}
-                                                        className="p-1.5 rounded-md text-text-secondary hover:text-text-primary hover:bg-gray-700 opacity-0 group-hover:opacity-100 transition-all"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                            const spaceBelow = window.innerHeight - rect.bottom;
+                                                            if (spaceBelow < 280) {
+                                                                setMenuStyle({ bottom: window.innerHeight - rect.top + 5, right: window.innerWidth - rect.right });
+                                                            } else {
+                                                                setMenuStyle({ top: rect.bottom + 5, right: window.innerWidth - rect.right });
+                                                            }
+                                                            setMenuOpen(menuOpen === doc.id ? null : doc.id);
+                                                            setStatusMenuFor(null);
+                                                            setDownloadMenuFor(null);
+                                                        }}
+                                                        className="p-1.5 rounded-md text-text-secondary hover:text-text-primary hover:bg-gray-700 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all"
                                                     >
                                                         <span className="material-symbols-outlined text-[20px]">more_horiz</span>
                                                     </button>
-                                                    {menuOpen === doc.id && (
-                                                        <div className="absolute right-6 top-12 z-50 w-44 bg-surface-dark border border-border-dark rounded-lg shadow-xl shadow-black/40 py-1">
-                                                            <button onClick={(e) => { e.stopPropagation(); handleRename(doc.id, doc.title); }} className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5 flex items-center gap-2">
-                                                                <span className="material-symbols-outlined text-[16px]">edit</span> Rename
-                                                            </button>
-                                                            {/* Change Status submenu */}
-                                                            <div className="relative">
-                                                                <button
-                                                                    onClick={(e) => { e.stopPropagation(); setStatusMenuFor(statusMenuFor === doc.id ? null : doc.id); }}
-                                                                    className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5 flex items-center gap-2 justify-between"
-                                                                >
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="material-symbols-outlined text-[16px]">swap_horiz</span> Status
-                                                                    </div>
-                                                                    <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-                                                                </button>
-                                                                {statusMenuFor === doc.id && (
-                                                                    <div className="absolute left-[-170px] top-0 z-50 w-40 bg-surface-dark border border-border-dark rounded-lg shadow-xl shadow-black/40 py-1">
-                                                                        {DOC_STATUSES.map(s => (
-                                                                            <button
-                                                                                key={s}
-                                                                                onClick={(e) => { e.stopPropagation(); handleStatusChange(doc.id, s); }}
-                                                                                className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors ${doc.status === s ? 'text-primary bg-primary/10' : 'text-text-secondary hover:text-white hover:bg-white/5'}`}
-                                                                            >
-                                                                                <span className={`w-2 h-2 rounded-full ${statusDot(s)}`}></span>
-                                                                                {s}
-                                                                            </button>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <hr className="border-border-dark my-1" />
-                                                            <button onClick={(e) => { e.stopPropagation(); handleDelete(doc.id); }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/10 flex items-center gap-2">
-                                                                <span className="material-symbols-outlined text-[16px]">delete</span> Delete
-                                                            </button>
-                                                        </div>
-                                                    )}
+
                                                 </td>
                                             </tr>
                                         );
@@ -250,8 +285,81 @@ const ProjectDetails: React.FC = () => {
                 )}
             </div>
 
-            {/* Click outside to close menus */}
-            {(menuOpen || statusMenuFor) && <div className="fixed inset-0 z-40" onClick={() => { setMenuOpen(null); setStatusMenuFor(null); }}></div>}
+            {/* Fixed Action Menu */}
+            {menuOpen && (
+                <>
+                    <div className="fixed inset-0 z-40" onClick={() => { setMenuOpen(null); setStatusMenuFor(null); setDownloadMenuFor(null); }}></div>
+                    <div
+                        className="fixed z-50 w-44 bg-surface-dark border border-border-dark rounded-lg shadow-xl shadow-black/60 py-1"
+                        style={menuStyle}
+                    >
+                        {(() => {
+                            const doc = documents.find(d => d.id === menuOpen);
+                            if (!doc) return null;
+                            return (
+                                <>
+                                    <button onClick={(e) => { e.stopPropagation(); handleRename(doc.id, doc.title); }} className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[16px]">edit</span> Rename
+                                    </button>
+                                    {/* Change Status submenu */}
+                                    <div className="relative">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setStatusMenuFor(statusMenuFor === doc.id ? null : doc.id); }}
+                                            className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5 flex items-center gap-2 justify-between"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-[16px]">swap_horiz</span> Status
+                                            </div>
+                                            <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                                        </button>
+                                        {statusMenuFor === doc.id && (
+                                            <div className="absolute right-full top-0 mr-1 z-50 w-40 bg-surface-dark border border-border-dark rounded-lg shadow-xl shadow-black/40 py-1">
+                                                {DOC_STATUSES.map(s => (
+                                                    <button
+                                                        key={s}
+                                                        onClick={(e) => { e.stopPropagation(); handleStatusChange(doc.id, s); }}
+                                                        className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors ${doc.status === s ? 'text-primary bg-primary/10' : 'text-text-secondary hover:text-white hover:bg-white/5'}`}
+                                                    >
+                                                        <span className={`w-2 h-2 rounded-full ${statusDot(s)}`}></span>
+                                                        {s}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <hr className="border-border-dark my-1" />
+                                    {/* Download submenu */}
+                                    <div className="relative">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setDownloadMenuFor(downloadMenuFor === doc.id ? null : doc.id); }}
+                                            className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5 flex items-center gap-2 justify-between"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-[16px]">download</span> Download
+                                            </div>
+                                            <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                                        </button>
+                                        {downloadMenuFor === doc.id && (
+                                            <div className="absolute right-full top-0 mr-1 z-50 w-32 bg-surface-dark border border-border-dark rounded-lg shadow-xl shadow-black/40 py-1">
+                                                <button onClick={(e) => { e.stopPropagation(); handleDownloadDoc(doc, 'pdf'); }} className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5">PDF</button>
+                                                <button onClick={(e) => { e.stopPropagation(); handleDownloadDoc(doc, 'docx'); }} className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5">Word</button>
+                                                <button onClick={(e) => { e.stopPropagation(); handleDownloadDoc(doc, 'html'); }} className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5">HTML</button>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <button onClick={(e) => { e.stopPropagation(); handleShareDoc(doc); }} className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[16px]">share</span> Share
+                                    </button>
+                                    <hr className="border-border-dark my-1" />
+                                    <button onClick={(e) => { e.stopPropagation(); handleDelete(doc.id); }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/10 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[16px]">delete</span> Delete
+                                    </button>
+                                </>
+                            );
+                        })()}
+                    </div>
+                </>
+            )}
         </div>
     );
 };

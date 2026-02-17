@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import Logo from '../components/Logo';
 
 interface AuthProps {
     view: 'LOGIN' | 'SIGNUP';
@@ -220,20 +221,12 @@ const Auth: React.FC<AuthProps> = ({ view }) => {
 
     // ─── Login / Signup Form ────────────────────────────────────
     return (
-        <div className="bg-background-dark font-display min-h-screen flex flex-col items-center justify-center p-4 text-white relative overflow-hidden">
-            {/* Background Effects */}
-            <div aria-hidden="true" className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[120px]"></div>
-                <div className="absolute top-[60%] -right-[10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px]"></div>
-            </div>
-
-            <div className="relative w-full max-w-[480px] bg-sidebar-dark rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-border-dark overflow-hidden">
-                <div className="px-8 pt-10 pb-6 flex flex-col items-center text-center">
-                    <div className="mb-6 inline-flex items-center justify-center size-12 rounded-xl bg-primary/10 text-primary border border-primary/20">
-                        <span className="material-symbols-outlined text-3xl">edit_note</span>
-                    </div>
-                    <h1 className="text-2xl font-bold text-white mb-2 tracking-tight">{isLogin ? 'DraftMind Studio' : 'Join DraftMind'}</h1>
-                    <p className="text-text-secondary text-sm">{isLogin ? 'Enter your details to access your AI workspace.' : 'Start writing smarter with your AI studio today.'}</p>
+        <div className="flex min-h-screen items-center justify-center bg-background-dark p-4">
+            <div className="w-full max-w-md animate-in fade-in zoom-in duration-300">
+                <div className="mb-8 text-center flex flex-col items-center">
+                    <Logo className="mb-6 scale-110" iconClassName="size-12" textClassName="text-2xl" />
+                    <h1 className="text-2xl font-bold text-text-primary tracking-tight">{isLogin ? 'DraftMind Studio' : 'Join DraftMind'}</h1>
+                    <p className="text-text-secondary text-sm">{isLogin ? 'Enter your details to access your AI workspace.' : 'Start writing smarter with your DraftMind today.'}</p>
                 </div>
 
                 <div className="px-8 pb-10">

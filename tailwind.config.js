@@ -15,23 +15,23 @@ export default {
                 primary: '#f97316', // Orange-500
                 secondary: '#3b82f6', // Blue-500
                 background: {
-                    dark: '#111827', // Gray-900
-                    light: '#f3f4f6', // Gray-100
+                    dark: 'var(--bg-dark)', // Was #111827
+                    light: '#f3f4f6',
                 },
                 surface: {
-                    dark: '#1f2937', // Gray-800
+                    dark: 'var(--surface-dark)', // Was #1f2937
                     light: '#ffffff',
                 },
                 text: {
-                    primary: '#f9fafb', // Gray-50
-                    secondary: '#9ca3af', // Gray-400
+                    primary: 'var(--text-primary)', // Was #f9fafb
+                    secondary: 'var(--text-secondary)', // Was #9ca3af
                 },
                 border: {
-                    dark: '#374151', // Gray-700
-                    light: '#e5e7eb', // Gray-200
+                    dark: 'var(--border-dark)', // Was #374151
+                    light: '#e5e7eb',
                 },
                 sidebar: {
-                    dark: '#111827', // Gray-900 (same as background for now, or darker)
+                    dark: 'var(--sidebar-bg)', // Was #111827
                 }
             },
             fontFamily: {

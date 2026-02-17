@@ -230,7 +230,7 @@ const Analytics: React.FC = () => {
                                 <span className="material-symbols-outlined text-primary">description</span>
                                 Recent Documents
                             </h3>
-                            <div className="bg-surface-dark rounded-xl border border-border-dark overflow-hidden">
+                            <div className="bg-surface-dark rounded-xl border border-border-dark overflow-hidden overflow-x-auto">
                                 {(data?.recentDocs?.length ?? 0) === 0 ? (
                                     <div className="p-8 text-center text-text-secondary">
                                         <span className="material-symbols-outlined text-3xl mb-2 block">description</span>

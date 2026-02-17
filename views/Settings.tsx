@@ -1,224 +1,305 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 
 const Settings: React.FC = () => {
     const navigate = useNavigate();
     const { user, profile, signOut } = useAuth();
-    const [fullName, setFullName] = useState('');
-    const [bio, setBio] = useState('');
-    const [email, setEmail] = useState('');
+    const { theme, setTheme } = useTheme();
+
     const [saving, setSaving] = useState(false);
-    const [saveMsg, setSaveMsg] = useState('');
+    const [emailDigests, setEmailDigests] = useState(false);
 
     // Password state
+    const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [passwordMsg, setPasswordMsg] = useState('');
-    const [changingPassword, setChangingPassword] = useState(false);
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordSuccess, setPasswordSuccess] = useState('');
+
+    // Delete Account Modal
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
     useEffect(() => {
-        if (profile) {
-            setFullName(profile.full_name || '');
-            setBio(profile.bio || '');
+        // Load settings from localStorage
+        const storedDigest = localStorage.getItem('draftmind_email_digest');
+        if (storedDigest !== null) {
+            setEmailDigests(storedDigest === 'true');
         }
-        if (user) {
-            setEmail(user.email || '');
-        }
-    }, [profile, user]);
+    }, []);
 
-    const handleSaveProfile = async () => {
-        if (!user) return;
-        setSaving(true);
-        setSaveMsg('');
-        const { error } = await supabase
-            .from('profiles')
-            .update({ full_name: fullName, bio, updated_at: new Date().toISOString() })
-            .eq('id', user.id);
-
-        setSaving(false);
-        setSaveMsg(error ? 'Failed to save.' : 'Profile updated!');
-        setTimeout(() => setSaveMsg(''), 3000);
+    const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
+        setTheme(newTheme);
     };
 
-    const handleChangePassword = async () => {
-        if (!newPassword) return;
-        if (newPassword !== confirmPassword) {
-            setPasswordMsg('Passwords do not match.');
+    const handleEmailDigestChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const checked = e.target.checked;
+        setEmailDigests(checked);
+        localStorage.setItem('draftmind_email_digest', String(checked));
+    };
+
+    const handleUpdatePassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setPasswordError('');
+        setPasswordSuccess('');
+
+        const isEmailProvider = user?.app_metadata?.providers?.includes('email');
+
+        if (isEmailProvider && !currentPassword) {
+            setPasswordError('Please enter your current password');
             return;
         }
+
         if (newPassword.length < 6) {
-            setPasswordMsg('Password must be at least 6 characters.');
+            setPasswordError('New password must be at least 6 characters');
             return;
         }
-        setChangingPassword(true);
-        setPasswordMsg('');
-        const { error } = await supabase.auth.updateUser({ password: newPassword });
-        setChangingPassword(false);
-        if (error) {
-            setPasswordMsg(error.message);
-        } else {
-            setPasswordMsg('Password updated successfully!');
+
+        if (newPassword !== confirmPassword) {
+            setPasswordError('New passwords do not match');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            // Check if user is signed in via Email/Password provider
+            const isEmailProvider = user?.app_metadata?.providers?.includes('email');
+
+            // Only verify current password if the user actually has one (Email provider)
+            if (isEmailProvider && user?.email) {
+                const { error: signInError } = await supabase.auth.signInWithPassword({
+                    email: user.email,
+                    password: currentPassword,
+                });
+
+                if (signInError) {
+                    // This causes the 400 error in console, which is expected for wrong passwords
+                    throw new Error('The current password you entered is incorrect.');
+                }
+            } else if (!isEmailProvider && currentPassword) {
+                // If user is OAuth (Google etc) but entered a current password, we can't verify it against a password hash
+                // But typically OAuth users don't have a password. 
+                // If they are setting one for the first time, we technically don't need to verify "current".
+                // However, to follow the UI instruction, if they typed something, we might want to warn them.
+                // For now, let's assume if they are NOT email provider, they are setting it for the first time 
+                // and we shouldn't have forced them to enter `currentPassword` in the UI validation.
+                // We will handle this by making `currentPassword` optional in UI for non-email users.
+            }
+
+            const { error } = await supabase.auth.updateUser({ password: newPassword });
+            if (error) throw error;
+            setPasswordSuccess('Password updated successfully');
+            setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
+        } catch (err: any) {
+            setPasswordError(err.message);
+        } finally {
+            setSaving(false);
         }
-        setTimeout(() => setPasswordMsg(''), 4000);
     };
 
-    const handleSignOut = async () => {
+    const handleDeleteAccount = async () => {
+        // In a real app, this would likely be a cloud function call
+        // For Supabase client, user cannot delete themselves easily without specialized setup
+        // We will just sign them out for now and show an alert
+        alert('Account deletion requests must be processed manually in this demo version. You have been signed out.');
         await signOut();
         navigate('/login');
     };
 
-    const initials = fullName ? fullName.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2) : '?';
-
     return (
         <div className="flex-1 overflow-y-auto bg-background-dark">
-            <div className="mx-auto max-w-4xl px-8 py-10">
+            <div className="mx-auto max-w-4xl px-4 md:px-8 py-10">
                 <nav className="mb-6 flex items-center gap-2 text-sm text-text-secondary">
                     <button onClick={() => navigate('/dashboard')} className="hover:text-text-primary transition-colors">Home</button>
                     <span className="material-symbols-outlined text-base">chevron_right</span>
-                    <span className="font-medium text-text-primary">Account Settings</span>
+                    <span className="text-text-primary font-medium">Settings</span>
                 </nav>
-                <div className="mb-10">
-                    <h1 className="text-3xl font-bold tracking-tight text-text-primary">Account Settings</h1>
-                    <p className="mt-2 text-base text-text-secondary">Manage your profile details, security preferences, and account data.</p>
-                </div>
 
-                {/* Profile Section */}
-                <section className="mb-12 rounded-xl border border-border-dark bg-sidebar-dark p-8 shadow-sm">
-                    <div className="mb-6 flex items-center justify-between">
-                        <h2 className="text-xl font-semibold text-text-primary">Profile Information</h2>
-                    </div>
-                    <div className="flex flex-col gap-8 md:flex-row">
-                        <div className="flex flex-col items-center gap-4 md:w-1/3">
-                            <div className="relative group h-32 w-32 cursor-pointer">
-                                <div className="h-full w-full overflow-hidden rounded-full ring-4 ring-border-dark bg-surface-dark flex items-center justify-center">
-                                    {profile?.avatar_url ? (
-                                        <img alt="Profile avatar" className="h-full w-full object-cover" src={profile.avatar_url} />
-                                    ) : (
-                                        <span className="text-4xl font-bold text-text-secondary">{initials}</span>
-                                    )}
-                                </div>
+                <h1 className="text-3xl font-bold text-text-primary mb-8 tracking-tight">Settings</h1>
+
+                <div className="flex flex-col gap-8">
+
+                    {/* Appearance */}
+                    <section className="bg-surface-dark rounded-xl border border-border-dark p-6 shadow-sm">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-purple-900/20 rounded-lg text-purple-400">
+                                <span className="material-symbols-outlined text-[24px]">palette</span>
                             </div>
-                            <span className="text-xs text-text-secondary capitalize">{profile?.plan || 'Free'} Plan</span>
-                        </div>
-                        <div className="flex-1 space-y-5">
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-text-secondary">Full Name</label>
-                                <input
-                                    className="w-full rounded-lg border-border-dark bg-background-dark px-3 py-2 text-text-primary placeholder-zinc-600 focus:border-primary focus:ring-1 focus:ring-primary transition-shadow"
-                                    value={fullName}
-                                    onChange={(e) => setFullName(e.target.value)}
-                                    type="text"
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-text-secondary">Email Address</label>
-                                <div className="relative">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                        <span className="material-symbols-outlined text-text-secondary text-lg">mail</span>
-                                    </div>
-                                    <input
-                                        className="w-full rounded-lg border-border-dark bg-background-dark pl-10 pr-3 py-2 text-text-secondary placeholder-zinc-600 cursor-not-allowed"
-                                        value={email}
-                                        disabled
-                                        type="email"
-                                    />
-                                </div>
-                                <p className="text-xs text-text-secondary">Email cannot be changed here.</p>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-text-secondary">Bio</label>
-                                <textarea
-                                    className="w-full rounded-lg border-border-dark bg-background-dark px-3 py-2 text-text-primary placeholder-zinc-600 focus:border-primary focus:ring-1 focus:ring-primary transition-shadow"
-                                    rows={3}
-                                    value={bio}
-                                    onChange={(e) => setBio(e.target.value)}
-                                />
-                            </div>
-                            <div className="pt-2 flex items-center gap-3">
-                                <button onClick={handleSaveProfile} disabled={saving} className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-sidebar-dark transition-colors disabled:opacity-50">
-                                    {saving ? 'Saving...' : 'Save Changes'}
-                                </button>
-                                {saveMsg && <span className={`text-sm ${saveMsg.includes('Failed') ? 'text-red-400' : 'text-green-400'}`}>{saveMsg}</span>}
+                            <div>
+                                <h2 className="text-lg font-bold text-text-primary">Appearance</h2>
+                                <p className="text-sm text-text-secondary">Customize your workspace look and feel.</p>
                             </div>
                         </div>
-                    </div>
-                </section>
 
-                {/* Security Section */}
-                <section className="mb-12">
-                    <div className="mb-6 border-b border-border-dark pb-2">
-                        <h2 className="text-xl font-semibold text-text-primary">Security</h2>
-                    </div>
-                    <div className="rounded-xl border border-border-dark bg-sidebar-dark p-8 shadow-sm">
-                        <h3 className="mb-4 text-base font-medium text-text-primary">Change Password</h3>
-                        <div className="max-w-md space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-text-secondary">New Password</label>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <button
+                                onClick={() => handleThemeChange('light')}
+                                className={`group relative p-4 rounded-xl border transition-all ${theme === 'light' ? 'bg-primary/10 border-primary shadow-sm ring-1 ring-primary' : 'bg-background-dark border-border-dark hover:border-text-secondary/50'}`}
+                            >
+                                <div className="flex items-center gap-3 mb-3">
+                                    <span className={`material-symbols-outlined ${theme === 'light' ? 'text-primary' : 'text-text-secondary'}`}>light_mode</span>
+                                    <span className={`font-semibold ${theme === 'light' ? 'text-primary' : 'text-text-primary'}`}>Light</span>
+                                </div>
+                                <div className="h-16 rounded-lg bg-gray-100 border border-gray-200"></div>
+                                {theme === 'light' && <div className="absolute top-4 right-4 text-primary"><span className="material-symbols-outlined">check_circle</span></div>}
+                            </button>
+
+                            <button
+                                onClick={() => handleThemeChange('dark')}
+                                className={`group relative p-4 rounded-xl border transition-all ${theme === 'dark' ? 'bg-primary/10 border-primary shadow-sm ring-1 ring-primary' : 'bg-background-dark border-border-dark hover:border-text-secondary/50'}`}
+                            >
+                                <div className="flex items-center gap-3 mb-3">
+                                    <span className={`material-symbols-outlined ${theme === 'dark' ? 'text-primary' : 'text-text-secondary'}`}>dark_mode</span>
+                                    <span className={`font-semibold ${theme === 'dark' ? 'text-primary' : 'text-text-primary'}`}>Dark</span>
+                                </div>
+                                <div className="h-16 rounded-lg bg-[#111827] border border-gray-700"></div>
+                                {theme === 'dark' && <div className="absolute top-4 right-4 text-primary"><span className="material-symbols-outlined">check_circle</span></div>}
+                            </button>
+
+                            <button
+                                onClick={() => handleThemeChange('system')}
+                                className={`group relative p-4 rounded-xl border transition-all ${theme === 'system' ? 'bg-primary/10 border-primary shadow-sm ring-1 ring-primary' : 'bg-background-dark border-border-dark hover:border-text-secondary/50'}`}
+                            >
+                                <div className="flex items-center gap-3 mb-3">
+                                    <span className={`material-symbols-outlined ${theme === 'system' ? 'text-primary' : 'text-text-secondary'}`}>settings_brightness</span>
+                                    <span className={`font-semibold ${theme === 'system' ? 'text-primary' : 'text-text-primary'}`}>System</span>
+                                </div>
+                                <div className="h-16 rounded-lg bg-gradient-to-r from-gray-100 to-[#111827] border border-gray-400"></div>
+                                {theme === 'system' && <div className="absolute top-4 right-4 text-primary"><span className="material-symbols-outlined">check_circle</span></div>}
+                            </button>
+                        </div>
+                    </section>
+
+                    {/* Notifications */}
+                    <section className="bg-surface-dark rounded-xl border border-border-dark p-6 shadow-sm">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-blue-900/20 rounded-lg text-blue-400">
+                                <span className="material-symbols-outlined text-[24px]">notifications</span>
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-text-primary">Notifications</h2>
+                                <p className="text-sm text-text-secondary">Manage how we communicate with you.</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between p-4 rounded-lg bg-background-dark border border-border-dark">
+                                <div>
+                                    <h3 className="text-text-primary font-medium">Email Digests</h3>
+                                    <p className="text-sm text-text-secondary">Receive a weekly summary of your project activity.</p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" className="sr-only peer" checked={emailDigests} onChange={handleEmailDigestChange} />
+                                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Security */}
+                    <section className="bg-surface-dark rounded-xl border border-border-dark p-6 shadow-sm">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-green-900/20 rounded-lg text-green-400">
+                                <span className="material-symbols-outlined text-[24px]">security</span>
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-text-primary">Security</h2>
+                                <p className="text-sm text-text-secondary">Update your password and security settings.</p>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleUpdatePassword} className="space-y-4 max-w-md">
+                            {passwordError && (
+                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+                                    {passwordError}
+                                </div>
+                            )}
+                            {passwordSuccess && (
+                                <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm">
+                                    {passwordSuccess}
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="block text-sm font-medium text-text-secondary mb-1">Current Password</label>
                                 <input
-                                    className="w-full rounded-lg border-border-dark bg-background-dark px-3 py-2 text-text-primary placeholder-zinc-600 focus:border-primary focus:ring-1 focus:ring-primary transition-shadow"
+                                    type="password"
+                                    value={currentPassword}
+                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                    className="w-full px-4 py-2.5 bg-background-dark border border-border-dark rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                                    placeholder={user?.app_metadata?.providers?.includes('email') ? '••••••••' : 'Not required for social logins'}
+                                    disabled={!user?.app_metadata?.providers?.includes('email')}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-text-secondary mb-1">New Password</label>
+                                <input
                                     type="password"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
+                                    className="w-full px-4 py-2.5 bg-background-dark border border-border-dark rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                                     placeholder="••••••••"
+                                    minLength={6}
                                 />
                             </div>
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-text-secondary">Confirm New Password</label>
+                            <div>
+                                <label className="block text-sm font-medium text-text-secondary mb-1">Confirm New Password</label>
                                 <input
-                                    className="w-full rounded-lg border-border-dark bg-background-dark px-3 py-2 text-text-primary placeholder-zinc-600 focus:border-primary focus:ring-1 focus:ring-primary transition-shadow"
                                     type="password"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className="w-full px-4 py-2.5 bg-background-dark border border-border-dark rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                                     placeholder="••••••••"
+                                    minLength={6}
                                 />
                             </div>
-                            <div className="pt-2 flex items-center gap-3">
-                                <button onClick={handleChangePassword} disabled={changingPassword} className="rounded-lg border border-border-dark bg-transparent px-4 py-2 text-sm font-semibold text-text-primary hover:bg-white/5 transition-colors disabled:opacity-50">
-                                    {changingPassword ? 'Updating...' : 'Update Password'}
-                                </button>
-                                {passwordMsg && <span className={`text-sm ${passwordMsg.includes('success') ? 'text-green-400' : 'text-red-400'}`}>{passwordMsg}</span>}
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                            <button
+                                type="submit"
+                                disabled={saving}
+                                className="px-4 py-2 bg-primary hover:bg-orange-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                            >
+                                {saving ? 'Verifying & Updating...' : 'Update Password'}
+                            </button>
+                        </form>
+                    </section>
 
-                {/* Sign Out & Danger Zone  */}
-                <section className="mb-8">
-                    <div className="mb-6 border-b border-border-dark pb-2">
-                        <h2 className="text-xl font-semibold text-text-primary">Account</h2>
-                    </div>
-                    <div className="flex items-center justify-between rounded-xl border border-border-dark bg-sidebar-dark p-6">
-                        <div className="space-y-1">
-                            <h3 className="text-base font-medium text-text-primary">Sign Out</h3>
-                            <p className="text-sm text-text-secondary">Sign out of your account on this device.</p>
-                        </div>
-                        <button onClick={handleSignOut} className="rounded-lg border border-border-dark bg-transparent px-5 py-2.5 text-sm font-semibold text-text-primary hover:bg-white/5 transition-colors">
-                            Sign Out
-                        </button>
-                    </div>
-                </section>
+                    {/* Danger Zone */}
+                    <section className="rounded-xl border border-red-900/30 p-6 bg-red-900/5">
+                        <h2 className="text-lg font-bold text-red-500 mb-2">Danger Zone</h2>
+                        <p className="text-sm text-text-secondary mb-6">Irreversible actions for your account.</p>
 
-                <section>
-                    <div className="mb-6 border-b border-border-dark pb-2">
-                        <h2 className="text-xl font-semibold text-red-500">Danger Zone</h2>
-                    </div>
-                    <div className="rounded-xl border border-red-900/30 bg-red-900/10 p-8">
-                        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
-                            <div className="space-y-1">
-                                <h3 className="text-base font-bold text-text-primary">Delete Account</h3>
-                                <p className="text-sm text-text-secondary">Once you delete your account, there is no going back. Please be certain.</p>
+                        <div className="flex items-center justify-between p-4 border border-red-900/20 rounded-lg bg-background-dark">
+                            <div>
+                                <h3 className="text-text-primary font-medium">Delete Account</h3>
+                                <p className="text-sm text-text-secondary">Permanently remove your account and all data.</p>
                             </div>
-                            <button className="whitespace-nowrap rounded-lg border border-red-900/50 bg-background-dark px-5 py-2.5 text-sm font-bold text-red-500 shadow-sm hover:bg-red-900/20 transition-colors">
-                                Delete Personal Account
+                            <button
+                                onClick={() => setDeleteModalOpen(true)}
+                                className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-lg font-medium transition-colors"
+                            >
+                                Delete Account
                             </button>
                         </div>
-                    </div>
-                </section>
+                    </section>
+                </div>
             </div>
+
+            <DeleteConfirmationModal
+                isOpen={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                onConfirm={handleDeleteAccount}
+                itemName="your account"
+                itemType="account"
+                title="Delete Account?"
+                description="This action cannot be undone. All your projects and documents will be permanently deleted."
+                confirmText="Delete Account"
+            />
         </div>
     );
 };
