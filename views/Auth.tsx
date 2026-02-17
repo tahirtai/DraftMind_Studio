@@ -133,8 +133,8 @@ const Auth: React.FC<AuthProps> = ({ view }) => {
                     <div className="absolute top-[60%] -right-[10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px]"></div>
                 </div>
 
-                <div className="relative w-full max-w-[480px] bg-sidebar-dark rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-border-dark overflow-hidden">
-                    <div className="px-8 pt-10 pb-6 flex flex-col items-center text-center">
+                <div className="relative w-full max-w-[480px] mx-4 bg-sidebar-dark rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-border-dark overflow-hidden">
+                    <div className="px-4 pt-8 pb-6 sm:px-8 sm:pt-10 flex flex-col items-center text-center">
                         <div className="mb-6 inline-flex items-center justify-center size-12 rounded-xl bg-green-500/10 text-green-400 border border-green-500/20">
                             <span className="material-symbols-outlined text-3xl">mark_email_read</span>
                         </div>
@@ -144,7 +144,7 @@ const Auth: React.FC<AuthProps> = ({ view }) => {
                         </p>
                     </div>
 
-                    <div className="px-8 pb-10">
+                    <div className="px-4 pb-8 sm:px-8 sm:pb-10">
                         {error && (
                             <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
                                 {error}
@@ -221,15 +221,15 @@ const Auth: React.FC<AuthProps> = ({ view }) => {
 
     // ─── Login / Signup Form ────────────────────────────────────
     return (
-        <div className="flex min-h-screen items-center justify-center bg-background-dark p-4">
-            <div className="w-full max-w-md animate-in fade-in zoom-in duration-300">
-                <div className="mb-8 text-center flex flex-col items-center">
+        <div className="flex min-h-screen flex-col items-center justify-center bg-background-dark p-4 gap-8">
+            <div className="w-full max-w-md animate-in fade-in zoom-in duration-300 bg-sidebar-dark border border-border-dark rounded-xl shadow-2xl overflow-hidden">
+                <div className="pt-8 pb-6 px-4 sm:px-8 text-center flex flex-col items-center">
                     <Logo className="mb-6 scale-110" iconClassName="size-12" textClassName="text-2xl" />
                     <h1 className="text-2xl font-bold text-text-primary tracking-tight">{isLogin ? 'DraftMind Studio' : 'Join DraftMind'}</h1>
                     <p className="text-text-secondary text-sm">{isLogin ? 'Enter your details to access your AI workspace.' : 'Start writing smarter with your DraftMind today.'}</p>
                 </div>
 
-                <div className="px-8 pb-10">
+                <div className="px-4 pb-8 sm:px-8 sm:pb-10">
                     {/* Error/Success Messages */}
                     {error && (
                         <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
@@ -318,7 +318,7 @@ const Auth: React.FC<AuthProps> = ({ view }) => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button type="button" className="flex items-center justify-center gap-2 px-4 py-2.5 border border-border-dark rounded-lg bg-[#141619] hover:bg-[#1E2126] transition-colors group">
                             <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>

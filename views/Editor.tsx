@@ -109,11 +109,13 @@ const Editor: React.FC = () => {
         ],
         content: '',
         onUpdate: ({ editor }) => {
+            // CRITICAL: Only update if document is fully loaded to prevent overwriting with empty state
+            if (!docLoaded) return;
             handleContentChange();
         },
         editorProps: {
             attributes: {
-                class: 'prose prose-lg prose-invert max-w-none focus:outline-none min-h-[60vh]',
+                class: 'prose prose-lg prose-invert max-w-none focus:outline-none min-h-[60vh] px-4 md:px-0',
             },
         },
     });
@@ -332,10 +334,11 @@ const Editor: React.FC = () => {
         return `${mins}m ago`;
     };
 
-    if (!editor) {
+    if (!editor || !docLoaded) {
         return (
-            <div className="flex-1 flex items-center justify-center bg-background-dark h-screen">
+            <div className="flex-1 flex items-center justify-center bg-background-dark h-screen gap-3">
                 <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                <span className="text-text-secondary text-sm animate-pulse">Loading document...</span>
             </div>
         );
     }
@@ -343,93 +346,131 @@ const Editor: React.FC = () => {
     return (
         <div className="flex-1 flex flex-col h-screen overflow-hidden relative bg-background-dark">
             {/* Top Header */}
-            <header className="h-16 shrink-0 border-b border-border-dark bg-background-dark/80 backdrop-blur-sm flex items-center justify-between px-6 sticky top-0 z-50">
-                <div className="flex items-center gap-4 min-w-0">
-                    <button onClick={handleBack} className="p-2 rounded-lg hover:bg-surface-dark text-gray-400 hover:text-white transition-colors">
+            <header className="h-16 shrink-0 border-b border-border-dark bg-background-dark/80 backdrop-blur-sm flex items-center justify-between px-4 md:px-6 sticky top-0 z-50 gap-4">
+                <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
+                    <button onClick={handleBack} className="p-2 rounded-lg hover:bg-surface-dark text-gray-400 hover:text-white transition-colors shrink-0">
                         <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                     </button>
                     <div className="flex flex-col min-w-0 overflow-hidden">
                         <div className="flex items-center gap-2 group cursor-pointer min-w-0">
-                            <h2 className="text-white text-lg font-semibold leading-tight tracking-tight truncate">{docTitle}</h2>
+                            <h2 className="text-white text-base md:text-lg font-semibold leading-tight tracking-tight truncate">{docTitle}</h2>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5 truncate">
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-1 shrink-0">
                                 <span className={`w-1.5 h-1.5 rounded-full ${saveStatus === 'saved' ? 'bg-green-500' : saveStatus === 'saving' ? 'bg-yellow-500 animate-pulse' : 'bg-red-500'}`}></span>
-                                {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving...' : 'Unsaved changes'}
+                                <span className="hidden sm:inline">{saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving...' : 'Unsaved'}</span>
                             </span>
-                            {lastSaved && (
-                                <>
-                                    <span>•</span>
-                                    <span>Last saved {formatTimeSince(lastSaved)}</span>
-                                </>
-                            )}
-                            <span>•</span>
-                            <span>{projectName}</span>
+                            <span className="hidden sm:inline">•</span>
+                            <span className="truncate hidden sm:inline">{projectName}</span>
                         </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0 ml-4">
-                    <span className="text-xs text-text-secondary bg-surface-dark px-2 py-1 rounded border border-border-dark hidden md:inline-block">{wordCount.toLocaleString()} words</span>
 
-                    {/* Status Selector */}
-                    <div className="relative">
-                        <button
-                            onClick={() => setStatusMenuOpen(!statusMenuOpen)}
-                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border cursor-pointer transition-colors ${statusColor(docStatus)}`}
-                        >
-                            {docStatus}
-                            <span className="material-symbols-outlined text-[14px]">expand_more</span>
-                        </button>
-                        {statusMenuOpen && (
-                            <div className="absolute right-0 top-9 z-50 w-36 bg-surface-dark border border-border-dark rounded-lg shadow-xl shadow-black/40 py-1">
-                                {DOC_STATUSES.map(s => (
-                                    <button
-                                        key={s}
-                                        onClick={() => handleStatusChange(s)}
-                                        className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2 ${docStatus === s ? 'text-primary bg-primary/10' : 'text-text-secondary hover:text-white hover:bg-white/5'}`}
-                                    >
-                                        <span className={`w-2 h-2 rounded-full ${s === 'Draft' ? 'bg-gray-400' : s === 'Review' ? 'bg-yellow-400' : s === 'Final' ? 'bg-green-400' : s === 'Published' ? 'bg-purple-400' : 'bg-red-400'}`}></span>
-                                        {s}
+                <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs text-text-secondary bg-surface-dark px-2 py-1 rounded border border-border-dark hidden lg:inline-block">{wordCount.toLocaleString()} words</span>
+
+                    {/* Desktop Actions */}
+                    <div className="hidden md:flex items-center gap-3">
+                        {/* Status Selector */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setStatusMenuOpen(!statusMenuOpen)}
+                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border cursor-pointer transition-colors ${statusColor(docStatus)}`}
+                            >
+                                {docStatus}
+                                <span className="material-symbols-outlined text-[14px]">expand_more</span>
+                            </button>
+                            {statusMenuOpen && (
+                                <div className="absolute right-0 top-9 z-50 w-36 bg-surface-dark border border-border-dark rounded-lg shadow-xl shadow-black/40 py-1">
+                                    {DOC_STATUSES.map(s => (
+                                        <button
+                                            key={s}
+                                            onClick={() => handleStatusChange(s)}
+                                            className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2 ${docStatus === s ? 'text-primary bg-primary/10' : 'text-text-secondary hover:text-white hover:bg-white/5'}`}
+                                        >
+                                            <span className={`w-2 h-2 rounded-full ${s === 'Draft' ? 'bg-gray-400' : s === 'Review' ? 'bg-yellow-400' : s === 'Final' ? 'bg-green-400' : s === 'Published' ? 'bg-purple-400' : 'bg-red-400'}`}></span>
+                                            {s}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="h-6 w-px bg-border-dark mx-1"></div>
+
+                        {/* Download Dropdown */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setDownloadMenuOpen(!downloadMenuOpen)}
+                                className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-surface-dark text-gray-300 hover:text-white hover:bg-gray-700 transition-colors border border-border-dark/50"
+                                title="Download"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">download</span>
+                                <span className="material-symbols-outlined text-[14px]">expand_more</span>
+                            </button>
+                            {downloadMenuOpen && (
+                                <div className="absolute right-0 top-10 z-50 w-36 bg-surface-dark border border-border-dark rounded-lg shadow-xl shadow-black/40 py-1">
+                                    <button onClick={() => handleDownload('pdf')} className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[16px]">picture_as_pdf</span> PDF
                                     </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                                    <button onClick={() => handleDownload('docx')} className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[16px]">description</span> Word
+                                    </button>
+                                    <button onClick={() => handleDownload('html')} className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[16px]">html</span> HTML
+                                    </button>
+                                </div>
+                            )}
+                        </div>
 
-                    <div className="h-6 w-px bg-border-dark mx-1"></div>
-
-                    {/* Download Dropdown */}
-                    <div className="relative">
-                        <button
-                            onClick={() => setDownloadMenuOpen(!downloadMenuOpen)}
-                            className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-surface-dark text-gray-300 hover:text-white hover:bg-gray-700 transition-colors border border-border-dark/50"
-                            title="Download"
-                        >
-                            <span className="material-symbols-outlined text-[20px]">download</span>
-                            <span className="material-symbols-outlined text-[14px]">expand_more</span>
+                        <button onClick={handleShare} className="flex items-center justify-center h-9 px-3 rounded-lg bg-surface-dark text-gray-300 hover:text-white hover:bg-gray-700 transition-colors border border-border-dark/50" title="Share">
+                            <span className="material-symbols-outlined text-[20px]">share</span>
                         </button>
-                        {downloadMenuOpen && (
-                            <div className="absolute right-0 top-10 z-50 w-36 bg-surface-dark border border-border-dark rounded-lg shadow-xl shadow-black/40 py-1">
-                                <button onClick={() => handleDownload('pdf')} className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-[16px]">picture_as_pdf</span> PDF
-                                </button>
-                                <button onClick={() => handleDownload('docx')} className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-[16px]">description</span> Word
-                                </button>
-                                <button onClick={() => handleDownload('html')} className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-white/5 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-[16px]">html</span> HTML
-                                </button>
-                            </div>
-                        )}
+                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="flex items-center justify-center gap-2 h-9 px-4 rounded-lg bg-primary text-white hover:bg-orange-600 transition-colors shadow-lg shadow-orange-900/20 font-medium tracking-wide">
+                            <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
+                            <span className="hidden lg:inline">AI Generate</span>
+                        </button>
                     </div>
 
-                    <button onClick={handleShare} className="flex items-center justify-center h-9 px-3 rounded-lg bg-surface-dark text-gray-300 hover:text-white hover:bg-gray-700 transition-colors border border-border-dark/50" title="Share">
-                        <span className="material-symbols-outlined text-[20px]">share</span>
-                    </button>
-                    <button onClick={() => setSidebarOpen(!sidebarOpen)} className="flex items-center justify-center gap-2 h-9 px-4 rounded-lg bg-primary text-white hover:bg-orange-600 transition-colors shadow-lg shadow-orange-900/20 font-medium tracking-wide">
-                        <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
-                        <span className="hidden sm:inline">AI Generate</span>
-                    </button>
+                    {/* Mobile Actions Menu */}
+                    <div className="md:hidden flex items-center gap-2">
+                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="flex items-center justify-center h-9 w-9 rounded-lg bg-primary text-white hover:bg-orange-600 transition-colors shadow-lg shadow-orange-900/20">
+                            <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
+                        </button>
+                        <div className="relative">
+                            <button
+                                onClick={() => setDownloadMenuOpen(!downloadMenuOpen)}
+                                className="flex items-center justify-center h-9 w-9 rounded-lg bg-surface-dark text-gray-300 border border-border-dark/50"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">more_vert</span>
+                            </button>
+                            {downloadMenuOpen && (
+                                <div className="absolute right-0 top-10 z-50 w-48 bg-surface-dark border border-border-dark rounded-lg shadow-xl shadow-black/40 py-1">
+                                    <div className="px-4 py-2 border-b border-border-dark mb-1">
+                                        <div className="text-xs text-text-secondary font-medium uppercase tracking-wider mb-2">Status</div>
+                                        <div className="flex flex-col gap-1">
+                                            {DOC_STATUSES.map(s => (
+                                                <button
+                                                    key={s}
+                                                    onClick={() => handleStatusChange(s)}
+                                                    className={`w-full text-left px-2 py-1.5 rounded-md text-sm transition-colors flex items-center gap-2 ${docStatus === s ? 'bg-white/10 text-white' : 'text-text-secondary hover:text-white hover:bg-white/5'}`}
+                                                >
+                                                    <span className={`w-2 h-2 rounded-full ${s === 'Draft' ? 'bg-gray-400' : s === 'Review' ? 'bg-yellow-400' : s === 'Final' ? 'bg-green-400' : s === 'Published' ? 'bg-purple-400' : 'bg-red-400'}`}></span>
+                                                    {s}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <button onClick={() => handleDownload('pdf')} className="w-full text-left px-4 py-3 text-sm text-text-secondary hover:text-white hover:bg-white/5 flex items-center gap-3">
+                                        <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span> Download PDF
+                                    </button>
+                                    <button onClick={() => handleShare()} className="w-full text-left px-4 py-3 text-sm text-text-secondary hover:text-white hover:bg-white/5 flex items-center gap-3">
+                                        <span className="material-symbols-outlined text-[18px]">share</span> Share
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </header >
 

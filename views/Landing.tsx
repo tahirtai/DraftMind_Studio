@@ -56,7 +56,7 @@ const Landing: React.FC = () => {
                 )}
             </header>
 
-            <main className="flex-1 flex flex-col items-center w-full">
+            <main className="flex-1 flex flex-col items-center w-full overflow-x-hidden">
                 <section className="w-full max-w-7xl px-4 py-20 md:py-32 lg:px-8 flex flex-col items-center text-center relative z-10">
                     {/* Hero Background Glows */}
                     <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob"></div>
