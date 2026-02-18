@@ -16,6 +16,7 @@ import UpdatePassword from './views/UpdatePassword';
 import About from './views/About';
 import Billing from './views/Billing';
 import Pricing from './views/Pricing';
+import AuthCallback from './views/AuthCallback';
 
 import { ThemeProvider } from './contexts/ThemeContext';
 
@@ -31,6 +32,7 @@ const App: React.FC = () => {
                         <Route path="/pricing" element={<Pricing />} /> {/* Added public Pricing route */}
                         <Route path="/login" element={<Auth view="LOGIN" />} />
                         <Route path="/signup" element={<Auth view="SIGNUP" />} />
+                        <Route path="/auth/callback" element={<AuthCallback />} />
                         <Route path="/update-password" element={<UpdatePassword />} />
 
                         {/* Protected Dashboard Layout Routes */}

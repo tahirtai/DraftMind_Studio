@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Session, User, AuthError } from '@supabase/supabase-js';
+import { Session, User, AuthError, Provider } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
 interface AuthContextType {
@@ -15,6 +15,7 @@ interface AuthContextType {
     resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
     updateProfile: (data: { full_name?: string; bio?: string; avatar_url?: string }) => Promise<{ error: any }>;
     updatePassword: (newPassword: string) => Promise<{ error: AuthError | null }>;
+    signInWithOAuth: (provider: Provider) => Promise<{ error: AuthError | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -120,8 +121,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
     };
 
+    const signInWithOAuth = async (provider: Provider) => {
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider,
+            options: {
+                redirectTo: `${window.location.origin}/auth/callback`,
+            },
+        });
+        return { error };
+    };
+
     return (
-        <AuthContext.Provider value={{ user, session, loading, profile, signUp, verifyOtp, resendOtp, signIn, signOut, resetPassword, updateProfile, updatePassword }}>
+        <AuthContext.Provider value={{ user, session, loading, profile, signUp, verifyOtp, resendOtp, signIn, signOut, resetPassword, updateProfile, updatePassword, signInWithOAuth }}>
             {children}
         </AuthContext.Provider>
     );

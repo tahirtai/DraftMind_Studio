@@ -9,7 +9,7 @@ import Typography from '@tiptap/extension-typography';
 import Link from '@tiptap/extension-link';
 import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
 import { getDocument, updateDocumentContent, logAiGeneration, updateDocumentStatus } from '../lib/database';
-import { generatePdf, generateDocx, generateHtml, shareContent } from '../lib/export';
+import { generatePdf, generateDocx, generateHtml, copyToClipboard, shareToWhatsApp, shareViaGmail, shareNative } from '../lib/export';
 
 interface Message {
     id: string;
@@ -47,9 +47,12 @@ const Editor: React.FC = () => {
     const [docStatus, setDocStatus] = useState('Draft');
     const [statusMenuOpen, setStatusMenuOpen] = useState(false);
     const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
+    const [shareModalOpen, setShareModalOpen] = useState(false);
+    const [exportLoading, setExportLoading] = useState<string | null>(null);
     const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [docLoaded, setDocLoaded] = useState(false);
+    const docLoadedRef = useRef(false);
     const [wordCount, setWordCount] = useState(0);
 
     // Refs for autosave to avoid stale closures in cleanup
@@ -67,6 +70,8 @@ const Editor: React.FC = () => {
     // Autosave logic - Immediate
     const saveNow = async () => {
         if (!docIdRef.current || !isDirtyRef.current) return;
+        // Guard: only save if initial content load is complete
+        if (!docLoadedRef.current) return;
 
         const content = contentRef.current;
         const wc = wordCountRef.current;
@@ -81,9 +86,10 @@ const Editor: React.FC = () => {
             setSaveStatus('saved');
             setLastSaved(new Date());
             isDirtyRef.current = false;
+            console.log('[Editor] Content saved successfully');
         } else {
             setSaveStatus('unsaved');
-            console.error('Autosave failed:', error);
+            console.error('[Editor] Autosave failed:', error);
         }
     };
 
@@ -109,8 +115,8 @@ const Editor: React.FC = () => {
         ],
         content: '',
         onUpdate: ({ editor }) => {
-            // CRITICAL: Only update if document is fully loaded to prevent overwriting with empty state
-            if (!docLoaded) return;
+            // CRITICAL: Use ref (not state) to avoid stale closure — editor is created once
+            if (!docLoadedRef.current) return;
             handleContentChange();
         },
         editorProps: {
@@ -120,46 +126,56 @@ const Editor: React.FC = () => {
         },
     });
 
-    // Load document on mount
+    // Fetched document data — stored in state so the hydration useEffect can react to it
+    const [documentData, setDocumentData] = useState<any>(null);
+
+    // Fetch document whenever docId changes
     useEffect(() => {
-        if (docId) loadDocument();
+        if (!docId) return;
+        let cancelled = false;
+
+        const fetchDoc = async () => {
+            const { data, error } = await getDocument(docId);
+            if (cancelled) return;
+            if (error || !data) {
+                navigate('/dashboard');
+                return;
+            }
+            console.log('[Editor] Content fetched from DB, length:', (data.content || '').length);
+            setDocumentData(data);
+        };
+
+        // Reset before fetching new doc
+        setDocumentData(null);
+        setDocLoaded(false);
+        docLoadedRef.current = false;
+
+        fetchDoc();
+        return () => { cancelled = true; };
     }, [docId]);
 
-    const loadDocument = async () => {
-        const { data, error } = await getDocument(docId!);
-        if (error || !data) {
-            navigate('/dashboard');
-            return;
-        }
-        setDocTitle(data.title);
-        setProjectName(data.projects?.name || 'Unknown');
-        setDocStatus(data.status || 'Draft');
-        setWordCount(data.word_count || 0);
-        setLastSaved(new Date(data.updated_at));
-
-        // Initial content load - update refs too!
-        if (editor) {
-            editor.commands.setContent(data.content || '', { emitUpdate: false });
-            contentRef.current = data.content || '';
-            wordCountRef.current = data.word_count || 0;
-            setDocLoaded(true);
-        } else {
-            setFetchedContent(data.content || '');
-        }
-    };
-
-    // Store fetched content temporarily
-    const [fetchedContent, setFetchedContent] = useState<string | null>(null);
-
-    // Sync content when editor ready
+    // Hydrate editor when BOTH editor instance AND documentData are available
     useEffect(() => {
-        if (editor && !docLoaded && fetchedContent !== null) {
-            editor.commands.setContent(fetchedContent, { emitUpdate: false });
-            contentRef.current = fetchedContent; // Sync ref
-            setDocLoaded(true);
-            setFetchedContent(null);
-        }
-    }, [editor, docLoaded, fetchedContent]);
+        if (!editor || !documentData || docLoadedRef.current) return;
+
+        // Set metadata state
+        setDocTitle(documentData.title);
+        setProjectName(documentData.projects?.name || 'Unknown');
+        setDocStatus(documentData.status || 'Draft');
+        setWordCount(documentData.word_count || 0);
+        setLastSaved(new Date(documentData.updated_at));
+
+        // Inject content into editor
+        const content = documentData.content || '';
+        editor.commands.setContent(content, { emitUpdate: false });
+        contentRef.current = content;
+        wordCountRef.current = documentData.word_count || 0;
+
+        // Mark as loaded — unlocks autosave and onUpdate
+        docLoadedRef.current = true;
+        setDocLoaded(true);
+        console.log('[Editor] Content hydrated into editor');
+    }, [editor, documentData]);
 
 
     const handleContentChange = () => {
@@ -212,11 +228,21 @@ const Editor: React.FC = () => {
     }, [messages, isGenerating]);
 
     // Status change
+    const closeAllMenus = () => {
+        setStatusMenuOpen(false);
+        setDownloadMenuOpen(false);
+    };
+
     const handleStatusChange = async (newStatus: string) => {
         if (!docId) return;
         setDocStatus(newStatus);
-        setStatusMenuOpen(false);
-        await updateDocumentStatus(docId, newStatus);
+        closeAllMenus();
+        const { error } = await updateDocumentStatus(docId, newStatus);
+        if (!error) {
+            console.log('[Editor] Status updated to:', newStatus);
+        } else {
+            console.error('[Editor] Status update failed:', error);
+        }
     };
 
     const statusColor = (status: string) => {
@@ -233,33 +259,63 @@ const Editor: React.FC = () => {
     const handleDownload = async (format: 'pdf' | 'docx' | 'html') => {
         if (!editor) return;
         const html = editor.getHTML();
-        const filename = docTitle.replace(/[^a-z0-9]/gi, '_');
-
-        switch (format) {
-            case 'pdf':
-                // For PDF, we might want to pass the editor element itself or the HTML
-                // Passing the editor element might capture some editor-specific UI (like cursor), 
-                // but usually html2pdf on the container is fine if we style it right.
-                // Or better, pass the HTML string to our improved generatePdf which creates a clean container.
-                await generatePdf(html, `${filename}.pdf`);
-                break;
-            case 'docx':
-                await generateDocx(html, `${filename}.docx`);
-                break;
-            case 'html':
-                generateHtml(html, `${filename}.html`);
-                break;
+        const text = editor.getText().trim();
+        if (!text) {
+            alert('Nothing to export — document is empty.');
+            return;
         }
+        const filename = docTitle.replace(/[^a-z0-9]/gi, '_');
+        setExportLoading(format);
         setDownloadMenuOpen(false);
+
+        try {
+            switch (format) {
+                case 'pdf':
+                    await generatePdf(html, `${filename}.pdf`);
+                    break;
+                case 'docx':
+                    await generateDocx(html, `${filename}.docx`);
+                    break;
+                case 'html':
+                    generateHtml(html, `${filename}.html`);
+                    break;
+            }
+        } finally {
+            setExportLoading(null);
+        }
     };
 
-    const handleShare = async () => {
+    const handleShare = () => {
+        setShareModalOpen(true);
+        closeAllMenus();
+    };
+
+    const handleCopyLink = async () => {
         const url = window.location.href;
-        await shareContent({
+        const success = await copyToClipboard(url);
+        if (success) {
+            alert('Link copied to clipboard!');
+        } else {
+            alert('Failed to copy link.');
+        }
+        setShareModalOpen(false);
+    };
+
+    const handleShareWhatsApp = () => {
+        shareToWhatsApp({
+            title: docTitle,
+            url: window.location.href,
+        });
+        setShareModalOpen(false);
+    };
+
+    const handleShareGmail = () => {
+        shareViaGmail({
             title: docTitle,
             text: `Check out "${docTitle}" on DraftMind Studio!`,
-            url: url
+            url: window.location.href,
         });
+        setShareModalOpen(false);
     };
 
     // AI generation via OpenRouter
@@ -374,7 +430,7 @@ const Editor: React.FC = () => {
                         {/* Status Selector */}
                         <div className="relative">
                             <button
-                                onClick={() => setStatusMenuOpen(!statusMenuOpen)}
+                                onClick={() => { setDownloadMenuOpen(false); setStatusMenuOpen(!statusMenuOpen); }}
                                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border cursor-pointer transition-colors ${statusColor(docStatus)}`}
                             >
                                 {docStatus}
@@ -401,7 +457,7 @@ const Editor: React.FC = () => {
                         {/* Download Dropdown */}
                         <div className="relative">
                             <button
-                                onClick={() => setDownloadMenuOpen(!downloadMenuOpen)}
+                                onClick={() => { setStatusMenuOpen(false); setDownloadMenuOpen(!downloadMenuOpen); }}
                                 className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-surface-dark text-gray-300 hover:text-white hover:bg-gray-700 transition-colors border border-border-dark/50"
                                 title="Download"
                             >
@@ -439,7 +495,7 @@ const Editor: React.FC = () => {
                         </button>
                         <div className="relative">
                             <button
-                                onClick={() => setDownloadMenuOpen(!downloadMenuOpen)}
+                                onClick={() => { setStatusMenuOpen(false); setDownloadMenuOpen(!downloadMenuOpen); }}
                                 className="flex items-center justify-center h-9 w-9 rounded-lg bg-surface-dark text-gray-300 border border-border-dark/50"
                             >
                                 <span className="material-symbols-outlined text-[20px]">more_vert</span>
@@ -728,6 +784,35 @@ const Editor: React.FC = () => {
             `}</style>
             {statusMenuOpen && <div className="fixed inset-0 z-10" onClick={() => setStatusMenuOpen(false)}></div>}
             {downloadMenuOpen && <div className="fixed inset-0 z-10" onClick={() => setDownloadMenuOpen(false)}></div>}
+
+            {/* Share Modal */}
+            {shareModalOpen && (
+                <>
+                    <div className="fixed inset-0 bg-black/60 z-50" onClick={() => setShareModalOpen(false)}></div>
+                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90%] max-w-sm bg-surface-dark border border-border-dark rounded-xl shadow-2xl shadow-black/50 overflow-hidden">
+                        <div className="px-5 py-4 border-b border-border-dark flex items-center justify-between">
+                            <h3 className="text-white font-semibold text-base">Share Document</h3>
+                            <button onClick={() => setShareModalOpen(false)} className="p-1 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+                        <div className="p-4 flex flex-col gap-2">
+                            <button onClick={handleCopyLink} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition-colors text-sm">
+                                <span className="material-symbols-outlined text-[20px] text-blue-400">content_copy</span>
+                                Copy Link
+                            </button>
+                            <button onClick={handleShareWhatsApp} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition-colors text-sm">
+                                <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+                                Share to WhatsApp
+                            </button>
+                            <button onClick={handleShareGmail} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition-colors text-sm">
+                                <span className="material-symbols-outlined text-[20px] text-red-400">mail</span>
+                                Share via Gmail
+                            </button>
+                        </div>
+                    </div>
+                </>
+            )}
         </div >
     );
 };
