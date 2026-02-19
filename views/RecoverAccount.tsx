@@ -48,11 +48,13 @@ const RecoverAccount: React.FC = () => {
             if (rpcError) throw rpcError;
 
             // Refetch profile to clear deleted state
-            const { data } = await supabase
+            const { data, error: fetchError } = await supabase
                 .from('profiles')
                 .select('full_name, avatar_url, bio, plan, deleted_at, status')
                 .eq('id', user.id)
                 .single();
+
+            if (fetchError) throw fetchError;
 
             if (data && !data.deleted_at && data.status !== 'deleted') {
                 // Force a page reload to re-initialize AuthContext with clean profile
