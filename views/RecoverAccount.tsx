@@ -4,10 +4,21 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
 const RecoverAccount: React.FC = () => {
-    const { user, profile, signOut } = useAuth();
+    const { user, loading: authLoading, profile, signOut } = useAuth();
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
+    const [recovering, setRecovering] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Wait for auth to initialize
+    if (authLoading) {
+        return (
+            <div className="min-h-screen bg-background-dark flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center text-white shadow-lg shadow-primary/20 animate-pulse">
+                    <span className="material-symbols-outlined">auto_awesome</span>
+                </div>
+            </div>
+        );
+    }
 
     // Not authenticated — go to login
     if (!user) {
@@ -41,7 +52,7 @@ const RecoverAccount: React.FC = () => {
         : 'Unknown date';
 
     const handleRecover = async () => {
-        setLoading(true);
+        setRecovering(true);
         setError(null);
         try {
             const { error: rpcError } = await supabase.rpc('recover_user');
@@ -65,7 +76,7 @@ const RecoverAccount: React.FC = () => {
         } catch (err: any) {
             setError(err.message || 'Failed to recover account. Please try again.');
         } finally {
-            setLoading(false);
+            setRecovering(false);
         }
     };
 
@@ -115,10 +126,10 @@ const RecoverAccount: React.FC = () => {
                     {/* Restore button */}
                     <button
                         onClick={handleRecover}
-                        disabled={loading}
+                        disabled={recovering}
                         className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-primary to-orange-600 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                        {loading ? (
+                        {recovering ? (
                             <>
                                 <span className="material-symbols-outlined animate-spin text-base">progress_activity</span>
                                 Restoring...
