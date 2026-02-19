@@ -303,7 +303,7 @@ const Landing: React.FC = () => {
 
                     {/* Row 1 — scrolls LEFT */}
                     <div style={{ overflow: 'hidden', WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 6%, black 94%, transparent 100%)', maskImage: 'linear-gradient(90deg, transparent 0%, black 6%, black 94%, transparent 100%)' }} className="mb-4">
-                        <div style={{ display: 'inline-flex', whiteSpace: 'nowrap', width: 'max-content', willChange: 'transform', animation: 'marquee 25s linear infinite' }}>
+                        <div className="animate-marquee" style={{ display: 'inline-flex', whiteSpace: 'nowrap', width: 'max-content', willChange: 'transform' }}>
                             {[...marqueeItems.slice(0, 7), ...marqueeItems.slice(0, 7)].map((item, i) => (
                                 <span key={`r1-${i}`} className="mx-3 md:mx-5 inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm text-sm md:text-base font-semibold text-white/30 hover:text-white/70 hover:border-primary/30 hover:bg-primary/[0.06] cursor-default select-none transition-all duration-300" aria-hidden={i >= 7 ? 'true' : undefined}>
                                     <span className="w-1.5 h-1.5 rounded-full bg-primary/50 shrink-0"></span>
@@ -320,7 +320,7 @@ const Landing: React.FC = () => {
 
                     {/* Row 2 — scrolls RIGHT (reverse) */}
                     <div style={{ overflow: 'hidden', WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 6%, black 94%, transparent 100%)', maskImage: 'linear-gradient(90deg, transparent 0%, black 6%, black 94%, transparent 100%)' }} className="mt-4">
-                        <div style={{ display: 'inline-flex', whiteSpace: 'nowrap', width: 'max-content', willChange: 'transform', animation: 'marquee-reverse 30s linear infinite' }}>
+                        <div className="animate-marquee-reverse" style={{ display: 'inline-flex', whiteSpace: 'nowrap', width: 'max-content', willChange: 'transform' }}>
                             {[...marqueeItems.slice(7), ...marqueeItems.slice(7)].map((item, i) => (
                                 <span key={`r2-${i}`} className="mx-3 md:mx-5 inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm text-sm md:text-base font-semibold text-white/30 hover:text-white/70 hover:border-primary/30 hover:bg-primary/[0.06] cursor-default select-none transition-all duration-300" aria-hidden={i >= 7 ? 'true' : undefined}>
                                     <span className="w-1.5 h-1.5 rounded-full bg-orange-400/50 shrink-0"></span>

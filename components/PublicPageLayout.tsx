@@ -76,9 +76,15 @@ const PublicPageLayout: React.FC<PublicPageLayoutProps> = ({ children, jsonLd })
 
                     {/* Desktop Actions */}
                     <div className="hidden md:flex items-center gap-3">
-                        <button onClick={() => navigate('/login')} className="text-sm font-medium text-white hover:text-primary transition-colors">Login</button>
-                        <button onClick={() => navigate('/signup')} className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:bg-orange-600 hover:scale-105 active:scale-95">
-                            Start Free
+                        <button onClick={() => navigate('/login')} className="login-btn-animated group relative flex items-center gap-2 cursor-pointer rounded-xl h-10 px-6 text-white text-sm font-bold leading-normal tracking-wide transition-all duration-300 hover:scale-105">
+                            <span className="relative z-10 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[18px] transition-transform duration-300 group-hover:rotate-[360deg]">login</span>
+                                Login
+                            </span>
+                        </button>
+                        <button onClick={() => navigate('/signup')} className="flex items-center gap-2 cursor-pointer overflow-hidden rounded-xl h-10 px-6 bg-gradient-to-r from-primary to-orange-500 text-white text-sm font-bold leading-normal tracking-wide shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-[1.03] transition-all duration-300">
+                            <span>Start Free</span>
+                            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                         </button>
                     </div>
 
