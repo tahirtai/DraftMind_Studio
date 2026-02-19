@@ -22,6 +22,7 @@ const Settings: React.FC = () => {
 
     // Delete Account Modal
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [deleteSuccess, setDeleteSuccess] = useState(false);
 
     useEffect(() => {
         // Load settings from localStorage
@@ -103,12 +104,21 @@ const Settings: React.FC = () => {
     };
 
     const handleDeleteAccount = async () => {
-        // In a real app, this would likely be a cloud function call
-        // For Supabase client, user cannot delete themselves easily without specialized setup
-        // We will just sign them out for now and show an alert
-        alert('Account deletion requests must be processed manually in this demo version. You have been signed out.');
-        await signOut();
-        navigate('/login');
+        try {
+            const { error } = await supabase.rpc('soft_delete_user');
+            if (error) throw error;
+
+            setDeleteSuccess(true);
+            setDeleteModalOpen(false);
+
+            // Sign out after a short delay so user can read the message
+            setTimeout(async () => {
+                await signOut();
+                navigate('/');
+            }, 4500);
+        } catch (err: any) {
+            alert('Failed to delete account: ' + (err.message || 'Unknown error'));
+        }
     };
 
     return (
@@ -272,16 +282,24 @@ const Settings: React.FC = () => {
                     {/* Danger Zone */}
                     <section className="rounded-xl border border-red-900/30 p-6 bg-red-900/5">
                         <h2 className="text-lg font-bold text-red-500 mb-2">Danger Zone</h2>
-                        <p className="text-sm text-text-secondary mb-6">Irreversible actions for your account.</p>
+                        <p className="text-sm text-text-secondary mb-6">Critical actions for your account.</p>
+
+                        {deleteSuccess && (
+                            <div className="mb-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm flex items-center gap-3">
+                                <span className="material-symbols-outlined">check_circle</span>
+                                <p>Your account has been scheduled for deletion. You can recover it by signing in again within the recovery period. Signing you out...</p>
+                            </div>
+                        )}
 
                         <div className="flex items-center justify-between p-4 border border-red-900/20 rounded-lg bg-background-dark">
                             <div>
                                 <h3 className="text-text-primary font-medium">Delete Account</h3>
-                                <p className="text-sm text-text-secondary">Permanently remove your account and all data.</p>
+                                <p className="text-sm text-text-secondary">Schedule your account and data for deletion.</p>
                             </div>
                             <button
                                 onClick={() => setDeleteModalOpen(true)}
-                                className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-lg font-medium transition-colors"
+                                disabled={deleteSuccess}
+                                className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Delete Account
                             </button>
@@ -297,8 +315,8 @@ const Settings: React.FC = () => {
                 itemName="your account"
                 itemType="account"
                 title="Delete Account?"
-                description="This action cannot be undone. All your projects and documents will be permanently deleted."
-                confirmText="Delete Account"
+                description="Your account will be scheduled for deletion. Your data will be retained during a recovery period, after which it will be permanently removed."
+                confirmText="Schedule Deletion"
             />
         </div>
     );

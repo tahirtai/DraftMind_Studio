@@ -6,7 +6,7 @@ interface AuthContextType {
     user: User | null;
     session: Session | null;
     loading: boolean;
-    profile: { full_name: string; avatar_url: string; bio: string; plan: string } | null;
+    profile: { full_name: string; avatar_url: string; bio: string; plan: string; deleted_at: string | null; status: string } | null;
     signUp: (email: string, password: string, fullName: string) => Promise<{ error: AuthError | null }>;
     verifyOtp: (email: string, token: string) => Promise<{ error: AuthError | null }>;
     resendOtp: (email: string) => Promise<{ error: AuthError | null }>;
@@ -35,10 +35,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const fetchProfile = async (userId: string) => {
         const { data } = await supabase
             .from('profiles')
-            .select('full_name, avatar_url, bio, plan')
+            .select('full_name, avatar_url, bio, plan, deleted_at, status')
             .eq('id', userId)
             .single();
-        if (data) setProfile(data);
+        if (data) {
+            if (data.deleted_at || data.status === 'deleted') {
+                // Soft-deleted user — sign them out
+                setProfile(null);
+                await supabase.auth.signOut();
+                return;
+            }
+            setProfile(data);
+        }
     };
 
     useEffect(() => {

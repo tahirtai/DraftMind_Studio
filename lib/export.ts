@@ -179,14 +179,32 @@ export const generateDocx = async (htmlContent: string, filename: string): Promi
         const blob = await asBlob(fullHtml, {
             orientation: 'portrait',
             margins: { top: 1440, right: 1440, bottom: 1440, left: 1440 }, // 1 inch margins in twips
-        });
-        saveAs(blob as Blob, filename);
+        }) as Blob;
+
+        // Fallback: if asBlob returned an empty/tiny blob, save as .doc (HTML-based Word file)
+        if (!blob || blob.size < 100) {
+            console.warn('[Export] asBlob returned empty blob, falling back to HTML-based .doc');
+            const fallbackBlob = new Blob([fullHtml], { type: 'application/msword' });
+            saveAs(fallbackBlob, filename.replace(/\.docx$/i, '.doc'));
+            console.log('[Export] DOCX fallback (.doc) generated successfully');
+            return true;
+        }
+
+        saveAs(blob, filename);
         console.log('[Export] DOCX generated successfully');
         return true;
     } catch (e) {
         console.error('[Export] DOCX generation failed:', e);
-        alert('Failed to generate Word document. Please try again.');
-        return false;
+        // Ultimate fallback: save the styled HTML as .doc so the user always gets content
+        try {
+            const fallbackBlob = new Blob([fullHtml], { type: 'application/msword' });
+            saveAs(fallbackBlob, filename.replace(/\.docx$/i, '.doc'));
+            console.log('[Export] DOCX fallback (.doc) generated after error');
+            return true;
+        } catch {
+            alert('Failed to generate Word document. Please try again.');
+            return false;
+        }
     }
 };
 
