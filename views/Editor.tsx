@@ -8,7 +8,8 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Typography from '@tiptap/extension-typography';
 import Link from '@tiptap/extension-link';
 import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
-import { getDocument, updateDocumentContent, logAiGeneration, updateDocumentStatus } from '../lib/database';
+import { getDocument, updateDocumentContent, updateDocumentStatus, getDailyAiUsage } from '../lib/database';
+import { supabase } from '../lib/supabase';
 import { generatePdf, generateDocx, generateHtml, copyToClipboard, shareToWhatsApp, shareViaGmail, shareNative } from '../lib/export';
 
 interface Message {
@@ -61,6 +62,10 @@ const Editor: React.FC = () => {
     const wordCountRef = useRef<number>(0);
     const isDirtyRef = useRef<boolean>(false);
     const docIdRef = useRef<string | null>(null);
+
+    const [quotaError, setQuotaError] = useState<{ limit: number, reset: string } | null>(null);
+    const [usageCount, setUsageCount] = useState(0);
+    const DAILY_LIMIT = 25;
 
     // Sync docId ref
     useEffect(() => {
@@ -176,6 +181,18 @@ const Editor: React.FC = () => {
         setDocLoaded(true);
         console.log('[Editor] Content hydrated into editor');
     }, [editor, documentData]);
+
+    // Fetch Daily Usage
+    useEffect(() => {
+        const fetchUsage = async () => {
+            const { count } = await getDailyAiUsage();
+            setUsageCount(count || 0);
+            if ((count || 0) >= DAILY_LIMIT) {
+                setQuotaError({ limit: DAILY_LIMIT, reset: 'tomorrow' });
+            }
+        };
+        fetchUsage();
+    }, []);
 
 
     const handleContentChange = () => {
@@ -318,9 +335,9 @@ const Editor: React.FC = () => {
         setShareModalOpen(false);
     };
 
-    // AI generation via OpenRouter
+    // AI generation via Supabase Edge Function
     const handleSendMessage = async () => {
-        if (!inputValue.trim() || isGenerating) return;
+        if (!inputValue.trim() || isGenerating || quotaError) return;
         const userText = inputValue.trim();
         setInputValue('');
         setIsGenerating(true);
@@ -329,19 +346,8 @@ const Editor: React.FC = () => {
         setMessages(prev => [...prev, userMsg]);
 
         try {
-            const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-            if (!apiKey) throw new Error('OpenRouter API key not configured');
-
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json',
-                    'HTTP-Referer': window.location.origin,
-                    'X-Title': 'DraftMind Studio',
-                },
-                body: JSON.stringify({
-                    model: 'google/gemini-2.0-flash-001',
+            const { data, error } = await supabase.functions.invoke('generate-content', {
+                body: {
                     messages: [
                         { role: 'system', content: 'You are DraftMind AI, a helpful and concise writing assistant. Keep your responses short and to the point unless asked to generate long content. Avoid unnecessary pleasantries. Focus on the user\'s specific writing needs.' },
                         ...messages.filter(m => m.id !== 'init-1').map(m => ({
@@ -349,25 +355,60 @@ const Editor: React.FC = () => {
                             content: m.text
                         })),
                         { role: 'user', content: userText }
-                    ],
-                }),
+                    ]
+                }
             });
 
-            if (!response.ok) throw new Error(`API returned ${response.status}`);
+            if (error) {
+                // Handle Rate Limit specifically
+                // Supabase functions invoke wrapper might obtain 429 as error context or we parse body if data is null
+                // Actually handle non-200 via error
+                try {
+                    // Sometimes error is string, sometimes object. 
+                    // If it is a FunctionInvokeError, we might need to parse.
+                    // But if our function returned 429 with JSON, invoke() often treats it as error.
+                    // Let's check context.
 
-            const result = await response.json();
-            const responseText = result.choices?.[0]?.message?.content || "I couldn't generate a response.";
-            const tokensUsed = result.usage?.total_tokens || 0;
+                    const errorBody = error && typeof error === 'object' && 'context' in error
+                        ? await (error.context as Response).json()
+                        : null;
 
+                    if (errorBody && errorBody.error === 'DAILY_LIMIT_REACHED') {
+                        setQuotaError({ limit: errorBody.limit, reset: errorBody.reset });
+                        throw new Error(`Daily limit reached (${errorBody.limit} requests/day). Resets ${errorBody.reset}.`);
+                    }
+                } catch (e) {
+                    // ignore parsing error, throw original
+                }
+
+                // Fallback for when we can't parse the 429 body easily or it's another error
+                throw error;
+            }
+
+            // Check if data itself has error (custom 200 OK with error field?)
+            // Our Edge function returns 429 status, so it should be caught in error block above, 
+            // OR strictly speaking supabase-js documentation says for 2xx it returns data, for others error.
+
+            // However, verify if 429 comes as data or error. usually
+            const responseText = data.choices?.[0]?.message?.content || "I couldn't generate a response.";
             const aiMsg: Message = { id: (Date.now() + 1).toString(), role: 'model', text: responseText };
             setMessages(prev => [...prev, aiMsg]);
 
-            if (docId) {
-                await logAiGeneration(docId, userText, responseText, tokensUsed);
+            // Increment usage count locally
+            setUsageCount(prev => prev + 1);
+            if (usageCount + 1 >= DAILY_LIMIT) {
+                setQuotaError({ limit: DAILY_LIMIT, reset: 'tomorrow' });
             }
+
         } catch (error: any) {
             console.error('AI error:', error);
-            const errorMsg: Message = { id: (Date.now() + 1).toString(), role: 'model', text: `Error: ${error.message}` };
+
+            // Attempt to parse validation error from string if possible
+            if (error.message && error.message.includes('DAILY_LIMIT_REACHED')) {
+                // Already handled above
+            }
+
+            const errorMsg: Message = { id: (Date.now() + 1).toString(), role: 'model', text: `Error: ${error.message || 'Failed to generate response.'}` };
             setMessages(prev => [...prev, errorMsg]);
         } finally {
             setIsGenerating(false);
@@ -724,6 +765,25 @@ const Editor: React.FC = () => {
 
                     {/* Input Area */}
                     <div className="p-4 border-t border-border-dark bg-sidebar-dark shrink-0">
+                        {/* Quota Indicator */}
+                        {!quotaError && (
+                            <div className="mb-3 px-1 flex items-center justify-between text-xs">
+                                <span className="text-gray-400">Daily Quota</span>
+                                <span className={`font-medium ${usageCount >= 20 ? 'text-orange-400' : 'text-primary'}`}>
+                                    {usageCount} / {DAILY_LIMIT} free requests
+                                </span>
+                            </div>
+                        )}
+                        {/* Progress Bar for Quota */}
+                        {!quotaError && (
+                            <div className="mb-4 h-1 bg-surface-dark rounded-full overflow-hidden border border-white/5">
+                                <div
+                                    className={`h-full transition-all duration-500 ${usageCount >= 20 ? 'bg-orange-500' : 'bg-primary'}`}
+                                    style={{ width: `${Math.min((usageCount / DAILY_LIMIT) * 100, 100)}%` }}
+                                ></div>
+                            </div>
+                        )}
+
                         <div className="relative group">
                             <textarea
                                 value={inputValue}
@@ -736,8 +796,8 @@ const Editor: React.FC = () => {
                             <div className="absolute bottom-2 right-2 flex items-center gap-1">
                                 <button
                                     onClick={handleSendMessage}
-                                    disabled={!inputValue.trim() || isGenerating}
-                                    className={`p-1.5 rounded-lg transition-all shadow-lg ${!inputValue.trim() || isGenerating
+                                    disabled={!inputValue.trim() || isGenerating || !!quotaError}
+                                    className={`p-1.5 rounded-lg transition-all shadow-lg ${!inputValue.trim() || isGenerating || !!quotaError
                                         ? 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
                                         : 'bg-gradient-to-br from-primary to-orange-600 hover:to-orange-500 text-white shadow-orange-900/20'
                                         }`}
@@ -746,10 +806,26 @@ const Editor: React.FC = () => {
                                 </button>
                             </div>
                         </div>
-                        <div className="mt-2 flex items-center justify-between text-[10px] text-gray-500 px-1">
-                            <span>Powered by DraftMind AI</span>
-                            <span>Ctrl+Enter to send</span>
-                        </div>
+                        {quotaError && (
+                            <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex flex-col gap-1">
+                                <div className="flex items-center gap-2 text-red-400 text-xs font-semibold uppercase tracking-wider">
+                                    <span className="material-symbols-outlined text-[16px]">lock</span>
+                                    Daily Limit Reached
+                                </div>
+                                <p className="text-gray-400 text-xs">
+                                    You've used all {quotaError.limit} free requests for today. Resets {quotaError.reset}.
+                                </p>
+                                <button className="mt-2 w-full py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded text-xs font-medium transition-colors">
+                                    Upgrade to Pro
+                                </button>
+                            </div>
+                        )}
+                        {!quotaError && (
+                            <div className="mt-2 flex items-center justify-between text-[10px] text-gray-500 px-1">
+                                <span>Powered by DraftMind AI</span>
+                                <span>Ctrl+Enter to send</span>
+                            </div>
+                        )}
                     </div>
                 </aside>
 
