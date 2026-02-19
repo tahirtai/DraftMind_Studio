@@ -21,6 +21,7 @@ import AuthCallback from './views/AuthCallback';
 // Legal pages — lazy loaded
 const PrivacyPolicy = React.lazy(() => import('./views/PrivacyPolicy'));
 const TermsOfService = React.lazy(() => import('./views/TermsOfService'));
+const RecoverAccount = React.lazy(() => import('./views/RecoverAccount'));
 
 import { ThemeProvider } from './contexts/ThemeContext';
 
@@ -66,6 +67,7 @@ const App: React.FC = () => {
                         <Route path="/signup" element={<Auth view="SIGNUP" />} />
                         <Route path="/auth/callback" element={<AuthCallback />} />
                         <Route path="/update-password" element={<UpdatePassword />} />
+                        <Route path="/account-recovery" element={<SEO><RecoverAccount /></SEO>} />
                         <Route path="/privacy" element={<SEO><PrivacyPolicy /></SEO>} />
                         <Route path="/terms" element={<SEO><TermsOfService /></SEO>} />
 

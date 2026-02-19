@@ -47,9 +47,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (data) {
             if (data.deleted_at || data.status === 'deleted') {
-                // Soft-deleted user — sign them out
-                setProfile(null);
-                await supabase.auth.signOut();
+                // Soft-deleted user — keep profile so recovery page can access it
+                setProfile(data);
                 return;
             }
             setProfile(data);

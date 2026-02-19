@@ -30,9 +30,9 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
         return <LoadingScreen />;
     }
 
-    // Block soft-deleted users from accessing protected routes
+    // Block soft-deleted users — redirect to recovery page
     if (profile.deleted_at || profile.status === 'deleted') {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/account-recovery" replace />;
     }
 
     return <>{children}</>;
