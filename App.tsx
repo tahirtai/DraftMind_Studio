@@ -18,6 +18,10 @@ import Billing from './views/Billing';
 import Pricing from './views/Pricing';
 import AuthCallback from './views/AuthCallback';
 
+// Legal pages — lazy loaded
+const PrivacyPolicy = React.lazy(() => import('./views/PrivacyPolicy'));
+const TermsOfService = React.lazy(() => import('./views/TermsOfService'));
+
 import { ThemeProvider } from './contexts/ThemeContext';
 
 // SEO Pages — lazy loaded for fast initial bundle
@@ -62,6 +66,8 @@ const App: React.FC = () => {
                         <Route path="/signup" element={<Auth view="SIGNUP" />} />
                         <Route path="/auth/callback" element={<AuthCallback />} />
                         <Route path="/update-password" element={<UpdatePassword />} />
+                        <Route path="/privacy" element={<SEO><PrivacyPolicy /></SEO>} />
+                        <Route path="/terms" element={<SEO><TermsOfService /></SEO>} />
 
                         {/* SEO Pages */}
                         <Route path="/features" element={<SEO><Features /></SEO>} />
