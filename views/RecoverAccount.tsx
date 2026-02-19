@@ -31,7 +31,7 @@ const RecoverAccount: React.FC = () => {
     }
 
     const deletedDate = profile.deleted_at
-        ? new Date(profile.deleted_at).toLocaleDateString('en-US', {
+        ? new Date(profile.deleted_at).toLocaleString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
