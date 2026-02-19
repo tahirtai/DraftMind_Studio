@@ -186,6 +186,7 @@ export const generateDocx = async (htmlContent: string, filename: string): Promi
             console.warn('[Export] asBlob returned empty blob, falling back to HTML-based .doc');
             const fallbackBlob = new Blob([fullHtml], { type: 'application/msword' });
             saveAs(fallbackBlob, filename.replace(/\.docx$/i, '.doc'));
+            alert('Exported as .doc format (Word-compatible). If you need .docx, please try again.');
             console.log('[Export] DOCX fallback (.doc) generated successfully');
             return true;
         }
@@ -199,6 +200,7 @@ export const generateDocx = async (htmlContent: string, filename: string): Promi
         try {
             const fallbackBlob = new Blob([fullHtml], { type: 'application/msword' });
             saveAs(fallbackBlob, filename.replace(/\.docx$/i, '.doc'));
+            alert('Exported as .doc format (Word-compatible). If you need .docx, please try again.');
             console.log('[Export] DOCX fallback (.doc) generated after error');
             return true;
         } catch {

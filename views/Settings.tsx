@@ -113,8 +113,13 @@ const Settings: React.FC = () => {
 
             // Sign out after a short delay so user can read the message
             setTimeout(async () => {
-                await signOut();
-                navigate('/');
+                try {
+                    await signOut();
+                    navigate('/');
+                } catch (e: any) {
+                    console.error('[Settings] Post-delete sign out failed:', e);
+                    navigate('/');
+                }
             }, 4500);
         } catch (err: any) {
             alert('Failed to delete account: ' + (err.message || 'Unknown error'));

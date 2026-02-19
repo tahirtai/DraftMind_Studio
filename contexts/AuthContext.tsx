@@ -33,11 +33,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [profile, setProfile] = useState<AuthContextType['profile']>(null);
 
     const fetchProfile = async (userId: string) => {
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from('profiles')
             .select('full_name, avatar_url, bio, plan, deleted_at, status')
             .eq('id', userId)
             .single();
+
+        if (error) {
+            console.error('[Auth] Failed to fetch profile:', error.message);
+            setProfile(null);
+            return;
+        }
+
         if (data) {
             if (data.deleted_at || data.status === 'deleted') {
                 // Soft-deleted user — sign them out
@@ -46,6 +53,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 return;
             }
             setProfile(data);
+        } else {
+            setProfile(null);
         }
     };
 

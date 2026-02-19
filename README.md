@@ -63,4 +63,3 @@ The project is optimized for deployment on **Vercel**.
 ## 📄 License
 
 This project is licensed under the MIT License.
-<!-- CodeRabbit test -->
