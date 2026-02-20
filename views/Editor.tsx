@@ -60,10 +60,8 @@ const Editor: React.FC = () => {
     // Refs for autosave to avoid stale closures in cleanup
     const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
     const contentRef = useRef<string>('');
-    const wordCountRef = useRef<number>(0);
-    const isDirtyRef = useRef<boolean>(false);
-    const wordCountRef = useRef<number>(0);
-    const isDirtyRef = useRef<boolean>(false);
+    const wordCountRef = useRef(0);
+    const isDirtyRef = useRef(false);
     const docIdRef = useRef<string | null>(null);
     const lastRequestTimeRef = useRef<number>(0); // Cooldown tracking
     const [cooldown, setCooldown] = useState(false); // Visual cooldown state
