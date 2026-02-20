@@ -4,6 +4,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -124,6 +125,8 @@ Deno.serve(async (req) => {
 
         // 6. Log Usage (Async - don't block response too much, but for reliability we await)
         // We need to insert into ai_generations
+        const wordCount = aiText.trim() ? aiText.trim().split(/\s+/).length : 0;
+
         const { error: logError } = await supabaseClient
             .from('ai_generations')
             .insert({
@@ -182,7 +185,7 @@ Deno.serve(async (req) => {
                         .update({
                             ai_requests_count: existing.ai_requests_count + 1,
                             tokens_used_total: existing.tokens_used_total + totalTokens,
-                            words_generated: existing.words_generated + aiText.split(/\s+/).length,
+                            words_generated: existing.words_generated + wordCount,
                         })
                         .eq('id', existing.id);
                 } else {
@@ -192,7 +195,7 @@ Deno.serve(async (req) => {
                             user_id: user.id,
                             ai_requests_count: 1,
                             tokens_used_total: totalTokens,
-                            words_generated: aiText.split(/\s+/).length,
+                            words_generated: wordCount,
                             period_start: periodStartMonth,
                             period_end: periodEndMonth,
                         });

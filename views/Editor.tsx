@@ -11,6 +11,7 @@ import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
 import { getDocument, updateDocumentContent, updateDocumentStatus, getDailyAiUsage } from '../lib/database';
 import { supabase } from '../lib/supabase';
 import { generatePdf, generateDocx, generateHtml, copyToClipboard, shareToWhatsApp, shareViaGmail, shareNative } from '../lib/export';
+import { trackEvent } from '../lib/analytics';
 
 interface Message {
     id: string;
@@ -61,7 +62,11 @@ const Editor: React.FC = () => {
     const contentRef = useRef<string>('');
     const wordCountRef = useRef<number>(0);
     const isDirtyRef = useRef<boolean>(false);
+    const wordCountRef = useRef<number>(0);
+    const isDirtyRef = useRef<boolean>(false);
     const docIdRef = useRef<string | null>(null);
+    const lastRequestTimeRef = useRef<number>(0); // Cooldown tracking
+    const [cooldown, setCooldown] = useState(false); // Visual cooldown state
 
     const [quotaError, setQuotaError] = useState<{ limit: number, reset: string } | null>(null);
     const [usageCount, setUsageCount] = useState(0);
@@ -199,6 +204,7 @@ const Editor: React.FC = () => {
                 setUsageCount(count || 0);
                 if ((count || 0) >= DAILY_LIMIT) {
                     setQuotaError({ limit: DAILY_LIMIT, reset: 'tomorrow' });
+                    trackEvent('ai_limit_hit', { source: 'initial_load', count });
                 }
             } catch (err) {
                 if (mounted) console.error('[Editor] Error checking quota:', err);
@@ -352,8 +358,19 @@ const Editor: React.FC = () => {
     };
 
     // AI generation via Supabase Edge Function
+    // AI generation via Supabase Edge Function
     const handleSendMessage = async () => {
+        // Cooldown Check (2s)
+        const now = Date.now();
+        if (now - lastRequestTimeRef.current < 2000) {
+            setCooldown(true);
+            setTimeout(() => setCooldown(false), 2000);
+            return;
+        }
+
         if (!inputValue.trim() || isGenerating || quotaError) return;
+
+        lastRequestTimeRef.current = now;
         const userText = inputValue.trim();
         setInputValue('');
         setIsGenerating(true);
@@ -377,6 +394,7 @@ const Editor: React.FC = () => {
             });
 
             if (error) {
+                trackEvent('ai_error', { error: error.message });
                 // Handle Rate Limit specifically
                 // Supabase functions invoke wrapper might obtain 429 as error context or we parse body if data is null
                 // Actually handle non-200 via error
@@ -392,6 +410,7 @@ const Editor: React.FC = () => {
 
                     if (errorBody && errorBody.error === 'DAILY_LIMIT_REACHED') {
                         setQuotaError({ limit: errorBody.limit, reset: errorBody.reset });
+                        trackEvent('ai_limit_hit', { limit: errorBody.limit });
                         throw new Error(`Daily limit reached (${errorBody.limit} requests/day). Resets ${errorBody.reset}.`);
                     }
                 } catch (e) {
@@ -401,6 +420,10 @@ const Editor: React.FC = () => {
                 // Fallback for when we can't parse the 429 body easily or it's another error
                 throw error;
             }
+
+            trackEvent('ai_generation_success', { model: 'google/gemini-2.0-flash-001' });
+
+            // Check if data itself has error (custom 200 OK with error field?)
 
             // Check if data itself has error (custom 200 OK with error field?)
             // Our Edge function returns 429 status, so it should be caught in error block above, 
@@ -417,6 +440,7 @@ const Editor: React.FC = () => {
                 if (nextCount >= DAILY_LIMIT) {
                     // Start blocking immediately after this render
                     setQuotaError({ limit: DAILY_LIMIT, reset: 'tomorrow' });
+                    trackEvent('ai_limit_hit', { source: 'usage_increment', count: nextCount });
                 }
                 return nextCount;
             });
@@ -756,6 +780,7 @@ const Editor: React.FC = () => {
                                             <button onClick={() => {
                                                 if (editor) {
                                                     editor.chain().focus().insertContent(msg.text).run();
+                                                    trackEvent('document_generated', { action: 'insert' });
                                                 }
                                             }} className="text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded border border-border-dark hover:border-green-500/50 hover:bg-green-500/10 hover:text-green-400 transition-colors flex items-center gap-1">
                                                 <span className="material-symbols-outlined text-[12px]">add</span> Insert
@@ -817,8 +842,8 @@ const Editor: React.FC = () => {
                             <div className="absolute bottom-2 right-2 flex items-center gap-1">
                                 <button
                                     onClick={handleSendMessage}
-                                    disabled={!inputValue.trim() || isGenerating || !!quotaError}
-                                    className={`p-1.5 rounded-lg transition-all shadow-lg ${!inputValue.trim() || isGenerating || !!quotaError
+                                    disabled={!inputValue.trim() || isGenerating || !!quotaError || cooldown}
+                                    className={`p-1.5 rounded-lg transition-all shadow-lg ${!inputValue.trim() || isGenerating || !!quotaError || cooldown
                                         ? 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
                                         : 'bg-gradient-to-br from-primary to-orange-600 hover:to-orange-500 text-white shadow-orange-900/20'
                                         }`}
@@ -836,7 +861,10 @@ const Editor: React.FC = () => {
                                 <p className="text-gray-400 text-xs">
                                     You've used all {quotaError.limit} free requests for today. Resets {quotaError.reset}.
                                 </p>
-                                <button className="mt-2 w-full py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded text-xs font-medium transition-colors">
+                                <button
+                                    onClick={() => trackEvent('upgrade_clicked', { source: 'quota_error' })}
+                                    className="mt-2 w-full py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded text-xs font-medium transition-colors"
+                                >
                                     Upgrade to Pro
                                 </button>
                             </div>
