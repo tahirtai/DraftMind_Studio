@@ -15,20 +15,26 @@ Deno.serve(async (req) => {
     }
 
     try {
+        // Forward caller JWT from the incoming request so auth.getUser() resolves the authenticated user.
+        const authHeader = req.headers.get('Authorization') ?? req.headers.get('authorization')
+
         const supabaseClient = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
             Deno.env.get('SUPABASE_ANON_KEY') ?? '',
             {
                 global: {
-                    headers: { Authorization: req.headers.get('Authorization')! },
+                    headers: authHeader ? { Authorization: authHeader } : {},
                 },
             }
         )
 
         // 1. Verify Auth
-        const {
-            data: { user },
-        } = await supabaseClient.auth.getUser()
+        // In Edge Functions, auth context may not be attached automatically, so resolve user from explicit Bearer JWT.
+        const accessToken = authHeader?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim()
+        const { data: userData } = accessToken
+            ? await supabaseClient.auth.getUser(accessToken)
+            : { data: { user: null } }
+        const user = userData.user
 
         if (!user) {
             return new Response(JSON.stringify({ error: 'Unauthorized' }), {

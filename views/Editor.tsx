@@ -368,6 +368,16 @@ const Editor: React.FC = () => {
 
         if (!inputValue.trim() || isGenerating || quotaError) return;
 
+        // Auth/session guard: avoid invoking Edge Function until session is restored (e.g. after OAuth redirect).
+        const [{ data: sessionData }, { data: userData, error: userError }] = await Promise.all([
+            supabase.auth.getSession(),
+            supabase.auth.getUser(),
+        ]);
+        if (userError || !sessionData.session?.access_token || !userData.user) {
+            console.warn('[Editor] AI invoke skipped: authenticated session is not ready yet');
+            return;
+        }
+
         lastRequestTimeRef.current = now;
         const userText = inputValue.trim();
         setInputValue('');
