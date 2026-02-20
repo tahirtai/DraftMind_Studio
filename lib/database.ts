@@ -214,6 +214,22 @@ export async function logAiGeneration(documentId: string, prompt: string, output
     return { error };
 }
 
+export async function getDailyAiUsage() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { count: 0, error: { message: 'Not authenticated' } };
+
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+
+    const { count, error } = await supabase
+        .from('ai_generations')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .gte('created_at', startOfDay);
+
+    return { count: count || 0, error };
+}
+
 // ─── Analytics ──────────────────────────────────────────────
 export async function getAnalyticsData() {
     const { data: { user } } = await supabase.auth.getUser();
