@@ -348,6 +348,7 @@ const Editor: React.FC = () => {
         try {
             const { data, error } = await supabase.functions.invoke('generate-content', {
                 body: {
+                    document_id: docId || undefined, // Include document_id for traceability
                     messages: [
                         { role: 'system', content: 'You are DraftMind AI, a helpful and concise writing assistant. Keep your responses short and to the point unless asked to generate long content. Avoid unnecessary pleasantries. Focus on the user\'s specific writing needs.' },
                         ...messages.filter(m => m.id !== 'init-1').map(m => ({
