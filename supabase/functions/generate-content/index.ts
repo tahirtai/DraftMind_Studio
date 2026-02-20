@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
         }
 
         // 2. Rate Limiting (25 requests/day)
-        const DAILY_LIMIT = 5;
+        const DAILY_LIMIT = 25;
         const now = new Date();
         const periodStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString(); // Start of today (00:00)
         // Note: In a real production app, you might use Redis or a specific easy-to-query table.
