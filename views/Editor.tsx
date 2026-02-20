@@ -182,16 +182,32 @@ const Editor: React.FC = () => {
         console.log('[Editor] Content hydrated into editor');
     }, [editor, documentData]);
 
-    // Fetch Daily Usage
+    // Fetch Daily Usage (Unmount Safe)
     useEffect(() => {
+        let mounted = true;
+
         const fetchUsage = async () => {
-            const { count } = await getDailyAiUsage();
-            setUsageCount(count || 0);
-            if ((count || 0) >= DAILY_LIMIT) {
-                setQuotaError({ limit: DAILY_LIMIT, reset: 'tomorrow' });
+            try {
+                const { count, error } = await getDailyAiUsage();
+                if (!mounted) return;
+
+                if (error) {
+                    console.error('[Editor] Failed to fetch daily usage:', error);
+                    return;
+                }
+
+                setUsageCount(count || 0);
+                if ((count || 0) >= DAILY_LIMIT) {
+                    setQuotaError({ limit: DAILY_LIMIT, reset: 'tomorrow' });
+                }
+            } catch (err) {
+                if (mounted) console.error('[Editor] Error checking quota:', err);
             }
         };
+
         fetchUsage();
+
+        return () => { mounted = false; };
     }, []);
 
 
@@ -395,11 +411,15 @@ const Editor: React.FC = () => {
             const aiMsg: Message = { id: (Date.now() + 1).toString(), role: 'model', text: responseText };
             setMessages(prev => [...prev, aiMsg]);
 
-            // Increment usage count locally
-            setUsageCount(prev => prev + 1);
-            if (usageCount + 1 >= DAILY_LIMIT) {
-                setQuotaError({ limit: DAILY_LIMIT, reset: 'tomorrow' });
-            }
+            // Increment usage count locally with functional update for safety
+            setUsageCount(prev => {
+                const nextCount = prev + 1;
+                if (nextCount >= DAILY_LIMIT) {
+                    // Start blocking immediately after this render
+                    setQuotaError({ limit: DAILY_LIMIT, reset: 'tomorrow' });
+                }
+                return nextCount;
+            });
 
         } catch (error: any) {
             console.error('AI error:', error);
