@@ -2,7 +2,7 @@
 
 DraftMind Studio is a modern, AI-powered writing and project management workspace. It combines a distraction-free editor with powerful organization tools and AI assistance to help you create better content, faster.
 
-![DraftMind Studio](https://draft-mind-studio.vercel.app/)
+app is live on this link : https://draft-mind-studio.vercel.app/
 
 ## 🚀 Features
 
